@@ -2,11 +2,6 @@
 
 # DGX Control
 
-**Your DGX Spark, legible.**
-
-GPU usage traced to the container holding it · every model on the box · one-click access to
-everything running · and an honest answer to *"what on this machine is reachable from outside?"*
-
 [![CI](https://github.com/mayankgrd/dgx-control/actions/workflows/ci.yml/badge.svg)](https://github.com/mayankgrd/dgx-control/actions/workflows/ci.yml)
 ![tests](https://img.shields.io/badge/tests-327%20backend%20%2B%2034%20frontend-brightgreen)
 ![python](https://img.shields.io/badge/python-3.11%2B-blue)
@@ -16,16 +11,23 @@ everything running · and an honest answer to *"what on this machine is reachabl
 
 </div>
 
+DGX Control is a self-hosted dashboard and control panel for the NVIDIA DGX Spark. It runs on the
+DGX itself and serves the whole thing — UI and API — from a single port, so instead of opening an
+SSH session and piecing the picture together from `nvidia-smi`, `docker ps`, `df` and `ss`, you get
+it in a browser: GPU utilisation attributed to the process **and the container** holding it, the
+unified memory pool reported as the single shared pool it actually is, Docker containers and images
+with live CPU, memory and I/O, disk usage including the HuggingFace cache, every model already
+downloaded to the box, every service currently running with the exact URL or SSH tunnel needed to
+reach it from wherever you happen to be sitting, and an audit of which ports on the machine are
+reachable from outside it.
+
+It also handles the small operational jobs you would otherwise open a terminal for: start, stop and
+restart containers, tail their logs, launch JupyterLab with direct GPU access or a vLLM server from
+a vetted catalog, and stop a runaway process. Installation is one unprivileged script — no `sudo`
+at any point — every request requires a token, control actions are off until you turn them on, and
+it can register itself into NVIDIA Sync so it opens from there alongside the built-in tools.
+
 ![Overview](docs/screenshots/overview.png)
-
----
-
-`nvidia-smi` tells you the GPU is busy. It does not tell you **which container** is holding
-58 GiB of it, whether your notebook is reachable from the office wifi, or what the OpenAI base
-URL for your vLLM server is. This does — from one port, unprivileged, in a browser.
-
-Built for the DGX Spark's specifics: unified memory reported honestly, the vLLM driver trap
-guarded against, and a launch budget that refuses a model server that will not fit.
 
 ## Install
 
@@ -75,6 +77,7 @@ offers.
 
 ### Which container is holding the GPU
 
+`nvidia-smi` tells you the GPU is busy; it does not tell you what is making it busy.
 NVML reports host-namespace PIDs, and the GPU process is usually a *child* of the container's main
 process — so the mapping is not obvious. dgxctl resolves it through `/proc/<gpu_pid>/cgroup` and
 shows you the container by name.
