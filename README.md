@@ -205,16 +205,78 @@ advertise_addresses = ["dgx.lab.internal"]
 Everything lives in `~/.config/dgxctl/config.toml`; see [config.example.toml](config.example.toml)
 for the annotated set — declared services, peer DGX systems, scan roots, collector intervals.
 
+## How this project is built
+
+DGX Control is developed **spec-first**. Nothing gets written because it seemed like a good idea at
+the time: a requirement is numbered, an architecture decision records how it will be met, a work
+item states the tests that will prove it, and a session log records what actually happened —
+including everything that turned out to be wrong.
+
+```mermaid
+flowchart LR
+    A["spec.md<br/>R · S · N · FE<br/>what it must do"]
+    B["architecture.md<br/>17 sections<br/>how it is met"]
+    C["SDD.md<br/>48 work items<br/>acceptance criteria"]
+    D["tests<br/>one per criterion"]
+    E["live_verify.py<br/>real hardware"]
+    F["AUDIT.md<br/>what happened"]
+    A --> B --> C --> D --> E --> F
+    E -. "regressions become new SDD entries" .-> C
+    F -. "changed understanding cascades back" .-> A
+```
+
+**1. `spec.md` — what it must do, numbered.** 96 functional sub-requirements across 16 groups
+(`R1`…`R16`), 9 security requirements (`S1`…`S9`), 8 non-functional (`N1`…`N8`), plus 63 numbered
+UI requirements in `spec_frontend.md` (`FE-*`). Owner-editable; every other document answers to it.
+
+**2. `architecture.md` — how it will be met.** Seventeen §-indexed sections, so a task loads the two
+it needs rather than the whole document. §11 is a standing list of the project's **known seams** —
+the boundaries where bugs actually live — and is required reading before writing tests that cross
+one.
+
+**3. `SDD.md` — the work, in permanent numbered items.** Each `SDD-NNN` is independently
+implementable, cites the spec ids it satisfies, and lists **acceptance criteria that name the tests
+that will prove them**. IDs are never reused or renumbered; superseded entries are marked, not
+deleted. Commits carry the id: `feat(gpu): NVML collector [SDD-010]`.
+
+**4. Tests — one named test per acceptance criterion.** Error paths are criteria, not extras.
+Parsers are tested against **real output captured from a live DGX**, never invented strings.
+
+**5. `scripts/live_verify.py` — because the suite cannot see everything.** Driver quirks, real
+cgroup layouts and genuinely exposed sockets only show up on hardware. Two rounds of live
+verification found **eleven defects the entire test matrix missed**; each was filed back as a new
+SDD entry with a regression test, and the loop closed.
+
+**6. `AUDIT.md` — what actually happened.** Written at the end of every session: requests, work
+completed, and the technical notes worth keeping — especially the wrong turns, since those are what
+a later reader needs most.
+
+<details>
+<summary><b>A worked example: one requirement, end to end</b></summary>
+
+| Stage | Artefact |
+|---|---|
+| Requirement | **R1.5** — *"Present unified memory honestly: the pool is shared by CPU and GPU. Show the single pool with its breakdown, never as two independent budgets."* |
+| Architecture | §4 records that `nvmlDeviceGetMemoryInfo` must be cross-checked against `psutil`; §11 lists "unified memory ↔ two-pool assumption" as a **seam** |
+| Work item | **SDD-010** (GPU collector), acceptance criterion 2: *"`test_unified_memory_single_pool` — reported total ≤ physical total; GPU and system memory are never summed"* |
+| Test | `test_reported_memory_never_exceeds_physical`, against a `/proc/meminfo` fixture captured from a real GB10 |
+| Live check | `live_verify.py` step 3 compares the reported total against the machine's own `/proc/meminfo` |
+| What happened | On hardware, `nvmlDeviceGetMemoryInfo` raised `NotSupported` — there is no separate GPU pool at all. Filed as **SDD-090**, fixed by reading `/proc/meminfo` and recording `memory_source` per device, and the UI now renders one segmented bar |
+| Recorded | The 2026-08-31 entry in `AUDIT.md`, under the live-hardware regressions |
+
+</details>
+
 ## Documentation
 
 | Doc | What it is |
 |---|---|
-| [CLAUDE.md](CLAUDE.md) | How to work in this repo |
 | [docs/spec.md](docs/spec.md) | Product requirements — R1–R16, S1–S9, N1–N8 |
+| [docs/spec_frontend.md](docs/spec_frontend.md) | UI requirements — FE-C1–C11, FE-1–FE-10 |
 | [docs/architecture.md](docs/architecture.md) | Architecture; §-indexed, load what you need |
-| [docs/SDD.md](docs/SDD.md) | Numbered work items with acceptance criteria |
-| [docs/AUDIT.md](docs/AUDIT.md) | Session-by-session log, including every live-hardware bug |
-| [docs/prior_art.md](docs/prior_art.md) | What already exists, and why this was built |
+| [docs/SDD.md](docs/SDD.md) | 48 numbered work items with acceptance criteria, and the live-hardware regression table |
+| [docs/AUDIT.md](docs/AUDIT.md) | Session-by-session log, including every wrong turn |
+| [docs/prior_art.md](docs/prior_art.md) | What already exists, and why this was built rather than adopted |
+| [CLAUDE.md](CLAUDE.md) | The working agreement: the loop above, plus this hardware's specifics |
 
 ## Development
 

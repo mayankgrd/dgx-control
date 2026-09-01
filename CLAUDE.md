@@ -11,6 +11,16 @@ and safe control of the box, registered into NVIDIA Sync as a custom tool.
 4. **Goal-Driven Execution** — Define success criteria. Loop until verified. Write unit,
    integration, smoke, and end-to-end tests.
 
+## The loop
+
+spec → architecture → numbered SDD entry → tests-first code → live verification → audit.
+
+Nothing is written because it seemed like a good idea at the time. A requirement is numbered, an
+architecture decision records how it will be met, an SDD entry states the tests that will prove it,
+and the audit records what actually happened — including the wrong turns, which are what a later
+reader needs most. Live verification feeds backwards: a regression found on hardware becomes a new
+SDD entry with a named regression test. The README summarises this for outside readers.
+
 ## Documentation Structure (source of truth, in priority order)
 
 1. **[docs/spec.md](docs/spec.md)** — Product Requirements (`R1…R8`, `S1…S9`, `N1…N7`). Owner-editable.
