@@ -7,6 +7,38 @@ file · commits · technical notes (patterns, decisions, gotchas).
 
 ---
 
+## 2026-09-01 — README trimmed, methodology moved out
+
+### User request
+1. The "How this project is built" section is too long; move it to `docs/`. Make the README simple
+   and clean, focused on what the tool is useful for, direct in tone and concise in prose.
+
+### Completed
+- [x] Methodology moved verbatim to [`docs/methodology.md`](methodology.md), with its relative
+      links re-rooted for its new location.
+- [x] README rewritten: 316 lines down to 212. Shorter sentences, no throat-clearing, every
+      feature heading now says what the tool *does for you* rather than naming a page.
+- [x] A two-sentence **Contributing** section keeps the one part of the methodology a reader
+      actually needs at the front door: write a numbered requirement in `docs/spec.md`.
+- [x] `CLAUDE.md` points at the new doc instead of a README section that no longer exists.
+
+### Technical notes
+
+**Feature headings now lead with the verb.** "Which container is holding the GPU" became "Finds
+which container is holding the GPU"; "How to actually reach your services" became "Tells you how to
+reach everything that is running". A heading that names a page describes the software; a heading
+that names an action describes what the reader gets.
+
+**The methodology was not shortened, only relocated.** It is worth having in full — it is how
+contributions are meant to arrive — but it is not what someone deciding whether to install the tool
+needs in their first minute. Only its two load-bearing sentences stayed in the README, under
+Contributing.
+
+**Longest remaining paragraph is 72 words**, and that is the opening description, which earns it.
+Everything after is under 65.
+
+---
+
 ## 2026-09-01 — Security review of the whole repo
 
 ### User request

@@ -22,8 +22,9 @@ layouts, or a genuinely exposed socket, and two rounds of live verification foun
 the whole suite missed. A bug found on hardware becomes a new SDD entry with its own regression
 test. What was learned goes back into the spec.
 
-Outside contributors are pointed at `docs/spec.md` first — the README asks for requirements, not
-patches. If you are handed a new requirement with no SDD entry, write the entry before the code.
+The full description lives in [docs/methodology.md](docs/methodology.md). Outside contributors are
+pointed at `docs/spec.md` first — the README asks for requirements, not patches. If you are handed a
+new requirement with no SDD entry, write the entry before the code.
 
 ## Documentation Structure (source of truth, in priority order)
 

@@ -64,6 +64,7 @@ SDD-NNN)` · `DEFERRED`.
 | SDD-150 | Path traversal in the SPA handler | 9 Security | S1 | COMPLETE |
 | SDD-151 | Restrictive modes on files dgxctl writes | 9 Security | S2 | COMPLETE |
 | SDD-152 | Auth sweep must see app-level routes | 9 Security | S1 | COMPLETE |
+| SDD-160 | README trimmed; methodology moved to docs | 9 Release | — | COMPLETE |
 | SDD-130 | Known-service catalog with explanations | 8 Services | R15.1, R15.4–R15.7 | COMPLETE |
 | SDD-131 | Classify by command line, not port alone | 8 Services | R15.3 | COMPLETE |
 | SDD-132 | Host address inventory | 8 Services | R16.1 | COMPLETE |
