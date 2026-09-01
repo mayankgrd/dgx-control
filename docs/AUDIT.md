@@ -7,6 +7,70 @@ file · commits · technical notes (patterns, decisions, gotchas).
 
 ---
 
+## 2026-09-01 — Security review of the whole repo
+
+### User request
+1. Perform a security review of the entire repo. (Their `/security-review` had failed because
+   `origin/HEAD` was unset after the repo was recreated; fixed with `git remote set-head origin -a`.)
+
+### Findings
+
+**CRITICAL — unauthenticated arbitrary file read (SDD-150).** The catch-all serving the built UI
+joined attacker-controlled path segments onto the web root and served whatever came back, with no
+authentication. Two escapes, both confirmed working against a running instance:
+
+- `GET /../../etc/passwd` — ordinary traversal.
+- `GET //etc/passwd` — an absolute path. `Path("/srv/web") / "/etc/passwd"` does not join, it
+  **substitutes**, discarding the base. No traversal sequence needed at all.
+
+Confirmed reading `/etc/passwd`, `/etc/hosts`, and the service's own API token. That last one turns
+the read into a **complete authentication bypass** — token in hand, an attacker has every route
+including control actions. The reference machine was bound to `0.0.0.0` at the time, so it was
+reachable from the LAN and the tailnet. Fixed, deployed, and re-verified against the live service
+with `curl --path-as-is`.
+
+**MEDIUM — files created under the umask (SDD-151).** `config.toml`, `actions.jsonl`,
+`processes.json` and `history.db` were 664/644 on a stock Ubuntu. `config.toml` can hold a peer
+instance's API token and decides the bind address; the action log records who asked for what. All
+0600 now, and the existing files on the reference machine were tightened.
+
+**The test gap that allowed it (SDD-152).** `test_every_route_requires_auth` enumerated the
+*routers*. The UI route is registered on the app, so the sweep never saw it. It now walks
+`app.routes` too, with an explicit `PUBLIC_BY_DESIGN` set, so a public route is something someone
+wrote down rather than something nobody looked at.
+
+**Checked and clean.** Service probing is loopback-only (no SSRF from an observed address); remote
+peer URLs come from operator config, not requests; no `shell=True` anywhere and every subprocess
+call is argv; catalog parameters cannot reach volumes, `privileged`, or namespace options; no
+`dangerouslySetInnerHTML` or `eval` in the frontend; token comparison is `hmac.compare_digest`; the
+token never appears in a response, an error body, or a log line; `pip-audit` and `npm audit` both
+report zero known vulnerabilities.
+
+### Technical notes
+
+**The probe has to be written the way an attacker sends it.** A first pass using an HTTP client
+reported everything safe — because httpx normalises `..` out of the path *before* transmitting, so
+the malicious request never arrives in its malicious form. A test written that way passes against a
+vulnerable server and proves nothing. The regression tests drive the ASGI app directly, with the
+raw path in `scope["path"]`.
+
+**Both fixes were verified by failing first.** The traversal tests were run against the pre-fix code
+(five failures), then against the fix (all pass), then against the deployed service over the LAN.
+
+**Then CI caught what local testing could not.** The new route-sweep guard assumed the production
+shape; CI has no `web/dist`, so the app registers a "UI not built" hint at `/` instead of the SPA
+route, and the assertion failed. Fixed by having the test supply a build, and verified both ways by
+moving `web/dist` aside and running the suite again — the environment difference was the bug, so
+reproducing it was the only honest check.
+
+### Open follow-ups
+- No response security headers (`X-Content-Type-Options`, `Referrer-Policy`, a CSP). Low value for a
+  single-origin dashboard with no third-party content, but cheap hardening if wanted.
+- No rate limiting on token verification. The token is 32 random bytes, so guessing is not the
+  threat; this would only matter against a future weaker credential.
+
+---
+
 ## 2026-09-01 — README rebuilt, with screenshots from the live machine
 
 ### User requests
