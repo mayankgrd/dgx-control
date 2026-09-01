@@ -57,7 +57,8 @@ def collect_routes(app):
 PUBLIC_BY_DESIGN = {
     "/api/health",  # liveness only, no host data (spec S1)
     "/api/stream",  # gated by a single-use ticket instead
-    "/{full_path:path}",  # the built UI; constrained by tests/integration/
+    "/{full_path:path}",  # the built UI; constrained by test_path_traversal.py
+    "/",  # the same route with no UI built: a build hint, no host data
     "/openapi.json",
     "/docs",
     "/docs/oauth2-redirect",
@@ -230,14 +231,32 @@ def test_no_destructive_route_exists(app_with_token):
     assert not any(m == "DELETE" for m, _ in collect_routes(app_with_token))
 
 
-def test_the_route_sweep_actually_sees_the_app_level_routes():
+def test_the_route_sweep_actually_sees_the_app_level_routes(tmp_path, monkeypatch):
     """Guard on the guard. The sweep previously walked only the routers, so the SPA
-    catch-all — the one route that turned out to serve arbitrary files unauthenticated —
-    was never examined."""
+    catch-all — the one route that turned out to serve arbitrary files unauthenticated — was
+    never examined.
+
+    The UI route only exists when a build is present: it is in production, and is not in CI.
+    The test supplies one rather than asserting whichever shape the runner happens to have.
+    """
+    web = tmp_path / "web"
+    (web / "assets").mkdir(parents=True)
+    (web / "index.html").write_text("INDEX")
+    monkeypatch.setattr("dgxctl.main._web_dist", lambda: web)
+
     app = create_app(Settings(), start_poller=False)
     paths = {p for _m, p in collect_routes(app)}
     assert "/{full_path:path}" in paths, "the SPA catch-all must be visible to this sweep"
     assert "/api/snapshot" in paths, "router routes must still be visible"
+
+
+def test_the_no_ui_placeholder_leaks_nothing(monkeypatch):
+    """With no build present the same path serves a hint instead. It is public, so it must
+    say nothing about the host."""
+    monkeypatch.setattr("dgxctl.main._web_dist", lambda: None)
+    body = TestClient(create_app(Settings(), start_poller=False)).get("/").text.lower()
+    for leak in ("gpu", "container", "/home/", "token", "tailscale", "model"):
+        assert leak not in body, f"the no-UI placeholder mentions {leak!r}"
 
 
 def test_files_written_by_dgxctl_are_not_world_readable(tmp_path, monkeypatch):
