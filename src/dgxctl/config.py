@@ -90,6 +90,11 @@ class Settings(BaseModel):
     history_window_minutes: int = 60
     history_max_bytes: int = 64 * 1024 * 1024
 
+    # Addresses to prefer when building links and port-forward commands. Set this when you
+    # reach the machine by a name rather than a raw IP (a DNS entry, a /etc/hosts alias, a
+    # MagicDNS name). Detected addresses are still offered, just after these.
+    advertise_addresses: list[str] = Field(default_factory=list)
+
     hf_cache: str = "~/.cache/huggingface"
     model_scan_roots: list[str] = Field(default_factory=list)
     pyenv_roots: list[str] = Field(default_factory=lambda: ["~", "~/projects"])

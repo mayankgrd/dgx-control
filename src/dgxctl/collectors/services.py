@@ -42,6 +42,7 @@ class ServiceCollector(Collector):
         self_port: int | None = None,
         declared: list | None = None,
         tailnet_fn=None,
+        advertise: list | None = None,
     ):
         super().__init__()
         self._listeners = listeners_fn
@@ -50,6 +51,7 @@ class ServiceCollector(Collector):
         self._self_port = self_port
         self._declared = declared or []
         self._tailnet = tailnet_fn or (lambda: (set(), None))
+        self._advertise = advertise or []
 
     async def collect(self) -> dict:
         listeners = self._listeners() or []
@@ -64,7 +66,9 @@ class ServiceCollector(Collector):
 
         section = ServiceSection()
         tailnet_ips, tailnet_name = self._tailnet()
-        section.host = HostAddressInfo(**endpoints.host_addresses(tailnet_ips, tailnet_name))
+        section.host = HostAddressInfo(
+            **endpoints.host_addresses(tailnet_ips, tailnet_name, self._advertise)
+        )
 
         seen_ports: set[int] = set()
         for lst in listeners:

@@ -13,7 +13,8 @@ from pathlib import Path
 
 REPO = Path(__file__).parent.parent.parent
 
-# Files that legitimately contain example addresses, and binaries we cannot grep.
+# Binaries we cannot grep. Screenshots are reviewed by eye before being committed — a
+# screenshot leaks what a grep cannot, so that review is part of adding one.
 SKIP_SUFFIXES = {".png", ".jpg", ".ico", ".woff", ".woff2", ".lock"}
 SKIP_NAMES = {"package-lock.json", "LOCAL.md"}
 

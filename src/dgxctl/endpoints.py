@@ -162,16 +162,28 @@ def lan_addresses() -> list[str]:
     return found
 
 
-def host_addresses(tailnet_ips: set[str] | None = None, tailnet_name: str | None = None) -> dict:
-    """What a URL to this machine could legitimately be built from."""
+def host_addresses(
+    tailnet_ips: set[str] | None = None,
+    tailnet_name: str | None = None,
+    advertise: list[str] | None = None,
+) -> dict:
+    """What a URL to this machine could legitimately be built from.
+
+    Configured `advertise_addresses` come first: someone who reaches their DGX as
+    `dgx.lab.internal` wants that in a link and a forward command, not a raw address that may
+    change. Detected addresses follow, so nothing is lost.
+    """
     import socket
 
     ips = sorted(tailnet_ips or set())
     v4 = next((i for i in ips if ":" not in i), None)
+    detected = lan_addresses()
+    preferred = [a for a in (advertise or []) if a]
+    lan = preferred + [a for a in detected if a not in preferred]
     return {
         "hostname": socket.gethostname(),
         "loopback": "127.0.0.1",
-        "lan": lan_addresses(),
+        "lan": lan,
         "tailnet_ip": v4,
         "tailnet_name": tailnet_name,
     }

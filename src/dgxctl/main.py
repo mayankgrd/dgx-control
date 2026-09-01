@@ -135,6 +135,7 @@ def build_collectors(settings: Settings, store: SnapshotStore) -> list:
             container_fn=lambda: section_data("containers", "containers", []),
             self_port=settings.port,
             declared=settings.services,
+            advertise=settings.advertise_addresses,
             tailnet_fn=lambda: (
                 tailscale.ips,
                 (section_data("tailscale", "self_dns_name", None)),

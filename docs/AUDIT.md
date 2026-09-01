@@ -7,6 +7,49 @@ file · commits · technical notes (patterns, decisions, gotchas).
 
 ---
 
+## 2026-09-01 — README rebuilt, with screenshots from the live machine
+
+### User requests
+1. Clean up README.md: clear feature articulation, a catchy intro, badges for passing tests,
+   clear installation instructions, a hero screenshot and some feature screenshots.
+
+### Completed
+- [x] README rewritten: centred hero with badges, a one-line pitch, install first, then features
+      each illustrated by a real screenshot, then security posture and configuration.
+- [x] Five screenshots captured from the live DGX and committed under `docs/screenshots/`.
+- [x] `advertise_addresses` (below) — a real feature the screenshot work surfaced.
+- [x] Every screenshot reviewed by eye before committing.
+
+### Technical notes
+
+**Capturing the screenshots needed a real browser, not a headless flag.** Firefox's `--screenshot`
+does not wait for asynchronous rendering, so the first attempt produced a page reading "Waiting for
+first reading…" — technically a screenshot of the product, and useless. Playwright with an explicit
+wait for a delivered SSE snapshot produced the real thing.
+
+**They were taken against a temporary no-token instance on loopback**, which is open by design
+(the OS is the boundary there), so a headless browser needed no localStorage priming. A generic
+`node_name` kept the machine's identity out of the header.
+
+**A screenshot leaks what a grep cannot.** The private-data test skips binaries, so reviewing each
+image by eye is part of adding one — that is now stated in the test rather than left as folklore.
+The first Services capture showed the machine's real LAN address in two `ssh -N -L` commands, which
+is exactly the sort of thing a text scan would never have found.
+
+**That produced a genuine feature, not a workaround.** `advertise_addresses` lets links and
+port-forward commands use a name you actually reach the machine by — `dgx.lab.internal` rather than
+a raw address that may change. Plenty of people reach a DGX by name; the raw IP was never the right
+default for a forward command someone is meant to copy.
+
+**And the wiring bug returned, a third time.** `host_addresses` grew the parameter and worked in
+isolation while the collector kept calling it without the argument — the same seam as the config
+preservation and the `existing=` parameter before it. The pattern is always the same: `ruff format`
+reflows a call, a later `str.replace` silently fails to match, and unit tests pass because the unit
+is correct. There is now a wiring test asserting a configured value actually reaches the section it
+is supposed to reach.
+
+---
+
 ## 2026-09-01 — Privacy review before going public, and a documentation pass
 
 ### User requests

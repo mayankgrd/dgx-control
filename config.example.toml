@@ -10,6 +10,10 @@ node_name = "dgx-spark"  # shown in the header, and in the node switcher on a fl
 control_enabled = false
 
 disk_warn_percent = 85
+# Prefer these when building links and port-forward commands. Set this if you reach the
+# machine by a name rather than a raw IP; detected addresses are still offered after these.
+# advertise_addresses = ["dgx.lab.internal"]
+
 hf_cache = "~/.cache/huggingface"
 sized_roots = ["~/.cache/huggingface", "~/projects"]
 pyenv_roots = ["~", "~/projects"]

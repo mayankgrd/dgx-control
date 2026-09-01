@@ -59,6 +59,8 @@ SDD-NNN)` · `DEFERRED`.
 | SDD-125 | Put `dgxctl` on PATH during install | 7 Onboarding | R14.1 | COMPLETE |
 | SDD-135 | Launched-process lifecycle is owned by dgxctl | 8 Services | R10.2 | COMPLETE |
 | SDD-140 | Private-data guard for a public repo | 9 Release | N8 | COMPLETE |
+| SDD-141 | Advertised addresses for links and forwards | 8 Services | R16.5 | COMPLETE |
+| SDD-142 | README with hero and feature screenshots | 9 Release | — | COMPLETE |
 | SDD-130 | Known-service catalog with explanations | 8 Services | R15.1, R15.4–R15.7 | COMPLETE |
 | SDD-131 | Classify by command line, not port alone | 8 Services | R15.3 | COMPLETE |
 | SDD-132 | Host address inventory | 8 Services | R16.1 | COMPLETE |

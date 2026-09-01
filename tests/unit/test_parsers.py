@@ -372,3 +372,42 @@ async def test_unidentified_listeners_on_the_tailnet_address_are_tailscale_itsel
     assert by_port[45077]["category"] == "infrastructure"
     # A loopback listener we cannot identify stays honestly unknown.
     assert by_port[11000]["category"] == "unknown"
+
+
+def test_advertised_addresses_are_preferred_over_detected_ones():
+    """Someone who reaches their DGX as `dgx.lab.internal` wants that in a link and a forward
+    command, not a raw address that may change."""
+    from dgxctl import endpoints
+
+    host = endpoints.host_addresses(
+        {"100.64.0.1"}, "dgx.example.ts.net", advertise=["dgx.lab.internal"]
+    )
+    assert host["lan"][0] == "dgx.lab.internal"
+    assert host["tailnet_name"] == "dgx.example.ts.net"
+
+
+def test_advertised_addresses_do_not_discard_detected_ones():
+    from dgxctl import endpoints
+
+    detected = endpoints.lan_addresses()
+    host = endpoints.host_addresses(advertise=["dgx.lab.internal"])
+    for addr in detected:
+        assert addr in host["lan"], "a detected address must still be offered"
+
+
+def test_no_advertised_addresses_leaves_detection_unchanged():
+    from dgxctl import endpoints
+
+    assert endpoints.host_addresses()["lan"] == endpoints.lan_addresses()
+
+
+async def test_advertised_address_actually_reaches_the_services_section():
+    """A wiring test, not a logic test. `host_addresses` grew an `advertise` parameter and
+    behaved correctly in isolation while the collector kept calling it without the argument —
+    the same class of seam bug that made an earlier config-preservation feature inert."""
+    from dgxctl.collectors.services import ServiceCollector
+
+    out = await ServiceCollector(
+        lambda: [], lambda: [], lambda: [], advertise=["dgx.lab.internal"]
+    ).collect()
+    assert out["host"]["lan"][0] == "dgx.lab.internal"
