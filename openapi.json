@@ -1,0 +1,2811 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "dgxctl",
+    "description": "Observability and safe control for NVIDIA DGX Spark systems",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health",
+        "description": "Liveness only. Deliberately exposes NO host data (spec S1).",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stream": {
+      "get": {
+        "summary": "Stream",
+        "operationId": "stream_api_stream_get",
+        "parameters": [
+          {
+            "name": "ticket",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ticket"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/nodes": {
+      "get": {
+        "summary": "Nodes",
+        "operationId": "nodes_api_nodes_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NodeInfo"
+                  },
+                  "type": "array",
+                  "title": "Response Nodes Api Nodes Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/snapshot": {
+      "get": {
+        "summary": "Snapshot",
+        "operationId": "snapshot_api_snapshot_get",
+        "parameters": [
+          {
+            "name": "node",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Node"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Snapshot"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/section/{name}": {
+      "get": {
+        "summary": "Section",
+        "operationId": "section_api_section__name__get",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          },
+          {
+            "name": "node",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Node"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/history": {
+      "get": {
+        "summary": "History",
+        "operationId": "history_api_history_get",
+        "parameters": [
+          {
+            "name": "metric",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Metric"
+            }
+          },
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 86400,
+              "minimum": 60,
+              "default": 3600,
+              "title": "Window"
+            }
+          },
+          {
+            "name": "node",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Node"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stream-ticket": {
+      "post": {
+        "summary": "Stream Ticket",
+        "description": "EventSource cannot send an Authorization header, so it presents a single-use ticket.\n\nThe long-lived token is never accepted as a query parameter: URLs land in logs,\nproxies and browser history.",
+        "operationId": "stream_ticket_api_stream_ticket_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schema/sections": {
+      "get": {
+        "summary": "Section Schema",
+        "description": "Type anchor: pins every section payload into the OpenAPI document (see SectionPayloads).",
+        "operationId": "section_schema_api_schema_sections_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SectionPayloads"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalog": {
+      "get": {
+        "summary": "Catalog",
+        "description": "Entries plus whether each is already running \u2014 including instances dgxctl did not\nstart, which is the normal case for JupyterLab (spec R10.4).",
+        "operationId": "catalog_api_catalog_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogSection"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/process/{entry_id}/logs": {
+      "get": {
+        "summary": "Process Logs",
+        "operationId": "process_logs_api_process__entry_id__logs_get",
+        "parameters": [
+          {
+            "name": "entry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Entry Id"
+            }
+          },
+          {
+            "name": "tail",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 2000,
+              "minimum": 1,
+              "default": 200,
+              "title": "Tail"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/containers/{name}/logs": {
+      "get": {
+        "summary": "Container Logs",
+        "operationId": "container_logs_api_containers__name__logs_get",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          },
+          {
+            "name": "tail",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 2000,
+              "minimum": 1,
+              "default": 200,
+              "title": "Tail"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/doctor": {
+      "get": {
+        "summary": "Doctor Route",
+        "operationId": "doctor_route_api_doctor_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DoctorReport"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/config": {
+      "get": {
+        "summary": "Effective Config",
+        "description": "Effective settings. The token is never included (spec S2).",
+        "operationId": "effective_config_api_config_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/actions/log": {
+      "get": {
+        "summary": "Action Log",
+        "operationId": "action_log_api_actions_log_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 200,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ActionLogEntry"
+                  },
+                  "title": "Response Action Log Api Actions Log Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/actions/container/{name}/{verb}": {
+      "post": {
+        "summary": "Container Action",
+        "operationId": "container_action_api_actions_container__name___verb__post",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          },
+          {
+            "name": "verb",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Verb"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/actions/launch/{entry_id}": {
+      "post": {
+        "summary": "Launch",
+        "operationId": "launch_api_actions_launch__entry_id__post",
+        "parameters": [
+          {
+            "name": "entry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Entry Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/actions/entry/{entry_id}/stop": {
+      "post": {
+        "summary": "Stop Entry",
+        "description": "Stop a host process dgxctl launched from a catalog entry.",
+        "operationId": "stop_entry_api_actions_entry__entry_id__stop_post",
+        "parameters": [
+          {
+            "name": "entry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Entry Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/actions/service/{service_id}/launch": {
+      "post": {
+        "summary": "Launch Service",
+        "description": "Launch a service declared in config.",
+        "operationId": "launch_service_api_actions_service__service_id__launch_post",
+        "parameters": [
+          {
+            "name": "service_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Service Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/actions/process/{pid}/kill": {
+      "post": {
+        "summary": "Kill Process",
+        "operationId": "kill_process_api_actions_process__pid__kill_post",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Pid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ActionLogEntry": {
+        "properties": {
+          "ts": {
+            "type": "string",
+            "title": "Ts"
+          },
+          "identity": {
+            "type": "string",
+            "title": "Identity"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ts",
+          "identity",
+          "action",
+          "target",
+          "ok",
+          "message"
+        ],
+        "title": "ActionLogEntry"
+      },
+      "ActionResult": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok",
+          "action",
+          "target",
+          "message"
+        ],
+        "title": "ActionResult"
+      },
+      "CatalogEntry": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "default": "container"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "image": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image"
+          },
+          "port": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Port"
+          },
+          "bind": {
+            "type": "string",
+            "title": "Bind",
+            "default": "127.0.0.1"
+          },
+          "gpu_memory_utilization": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gpu Memory Utilization"
+          },
+          "params": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogParam"
+            },
+            "type": "array",
+            "title": "Params"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "running": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RunningInstance"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "CatalogEntry"
+      },
+      "CatalogParam": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "default": "string"
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required",
+            "default": false
+          },
+          "default": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "CatalogParam"
+      },
+      "CatalogSection": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogEntry"
+            },
+            "type": "array",
+            "title": "Entries"
+          }
+        },
+        "type": "object",
+        "title": "CatalogSection"
+      },
+      "ContainerInfo": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "image": {
+            "type": "string",
+            "title": "Image"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "restart_policy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Restart Policy"
+          },
+          "restart_count": {
+            "type": "integer",
+            "title": "Restart Count",
+            "default": 0
+          },
+          "cpu_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cpu Percent"
+          },
+          "memory_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory Bytes"
+          },
+          "memory_limit_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory Limit Bytes"
+          },
+          "net_rx_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net Rx Bytes"
+          },
+          "net_tx_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net Tx Bytes"
+          },
+          "block_read_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Block Read Bytes"
+          },
+          "block_write_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Block Write Bytes"
+          },
+          "ports": {
+            "items": {
+              "$ref": "#/components/schemas/PortBinding"
+            },
+            "type": "array",
+            "title": "Ports"
+          },
+          "launched_by_dgxctl": {
+            "type": "boolean",
+            "title": "Launched By Dgxctl",
+            "default": false
+          },
+          "gpu_memory_utilization": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gpu Memory Utilization"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "image",
+          "status",
+          "state"
+        ],
+        "title": "ContainerInfo"
+      },
+      "ContainerSection": {
+        "properties": {
+          "containers": {
+            "items": {
+              "$ref": "#/components/schemas/ContainerInfo"
+            },
+            "type": "array",
+            "title": "Containers"
+          },
+          "running": {
+            "type": "integer",
+            "title": "Running",
+            "default": 0
+          },
+          "stopped": {
+            "type": "integer",
+            "title": "Stopped",
+            "default": 0
+          },
+          "stats_available": {
+            "type": "boolean",
+            "title": "Stats Available",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "ContainerSection"
+      },
+      "DiskSection": {
+        "properties": {
+          "filesystems": {
+            "items": {
+              "$ref": "#/components/schemas/FilesystemInfo"
+            },
+            "type": "array",
+            "title": "Filesystems"
+          },
+          "sized_roots": {
+            "items": {
+              "$ref": "#/components/schemas/SizedRoot"
+            },
+            "type": "array",
+            "title": "Sized Roots"
+          },
+          "docker": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DockerUsage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "DiskSection"
+      },
+      "DockerUsage": {
+        "properties": {
+          "images_bytes": {
+            "type": "integer",
+            "title": "Images Bytes",
+            "default": 0
+          },
+          "containers_bytes": {
+            "type": "integer",
+            "title": "Containers Bytes",
+            "default": 0
+          },
+          "volumes_bytes": {
+            "type": "integer",
+            "title": "Volumes Bytes",
+            "default": 0
+          },
+          "build_cache_bytes": {
+            "type": "integer",
+            "title": "Build Cache Bytes",
+            "default": 0
+          },
+          "reclaimable_bytes": {
+            "type": "integer",
+            "title": "Reclaimable Bytes",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "DockerUsage"
+      },
+      "DoctorCheck": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "fix": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fix"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "status",
+          "detail"
+        ],
+        "title": "DoctorCheck"
+      },
+      "DoctorReport": {
+        "properties": {
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/DoctorCheck"
+            },
+            "type": "array",
+            "title": "Checks"
+          },
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "DoctorReport"
+      },
+      "Envelope": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/Status",
+            "default": "ok"
+          },
+          "data": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "collected_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Collected At"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          }
+        },
+        "type": "object",
+        "title": "Envelope"
+      },
+      "Exposure": {
+        "type": "string",
+        "enum": [
+          "loopback",
+          "lan",
+          "tailnet",
+          "all",
+          "unknown"
+        ],
+        "title": "Exposure",
+        "description": "How reachable a bound socket is. The vocabulary is shared with the UI."
+      },
+      "FilesystemInfo": {
+        "properties": {
+          "mountpoint": {
+            "type": "string",
+            "title": "Mountpoint"
+          },
+          "device": {
+            "type": "string",
+            "title": "Device"
+          },
+          "fstype": {
+            "type": "string",
+            "title": "Fstype"
+          },
+          "total_bytes": {
+            "type": "integer",
+            "title": "Total Bytes"
+          },
+          "used_bytes": {
+            "type": "integer",
+            "title": "Used Bytes"
+          },
+          "free_bytes": {
+            "type": "integer",
+            "title": "Free Bytes"
+          },
+          "percent": {
+            "type": "number",
+            "title": "Percent"
+          },
+          "over_threshold": {
+            "type": "boolean",
+            "title": "Over Threshold",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "mountpoint",
+          "device",
+          "fstype",
+          "total_bytes",
+          "used_bytes",
+          "free_bytes",
+          "percent"
+        ],
+        "title": "FilesystemInfo"
+      },
+      "GpuDevice": {
+        "properties": {
+          "index": {
+            "type": "integer",
+            "title": "Index"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "utilization_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Utilization Percent"
+          },
+          "memory_utilization_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory Utilization Percent"
+          },
+          "temperature_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature C"
+          },
+          "power_w": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Power W"
+          },
+          "power_limit_w": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Power Limit W"
+          },
+          "sm_clock_mhz": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sm Clock Mhz"
+          },
+          "memory_total_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory Total Bytes"
+          },
+          "memory_used_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory Used Bytes"
+          },
+          "memory_source": {
+            "type": "string",
+            "title": "Memory Source",
+            "default": "nvml"
+          }
+        },
+        "type": "object",
+        "required": [
+          "index",
+          "name"
+        ],
+        "title": "GpuDevice"
+      },
+      "GpuSection": {
+        "properties": {
+          "devices": {
+            "items": {
+              "$ref": "#/components/schemas/GpuDevice"
+            },
+            "type": "array",
+            "title": "Devices"
+          },
+          "memory": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MemoryPool"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "driver_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Driver Version"
+          },
+          "cuda_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cuda Version"
+          }
+        },
+        "type": "object",
+        "title": "GpuSection"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "uptime_seconds": {
+            "type": "number",
+            "title": "Uptime Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "version",
+          "uptime_seconds"
+        ],
+        "title": "HealthResponse",
+        "description": "Deliberately contains NO host data (spec S1)."
+      },
+      "HostAddressInfo": {
+        "properties": {
+          "hostname": {
+            "type": "string",
+            "title": "Hostname",
+            "default": ""
+          },
+          "loopback": {
+            "type": "string",
+            "title": "Loopback",
+            "default": "127.0.0.1"
+          },
+          "lan": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Lan"
+          },
+          "tailnet_ip": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tailnet Ip"
+          },
+          "tailnet_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tailnet Name"
+          }
+        },
+        "type": "object",
+        "title": "HostAddressInfo",
+        "description": "Where this machine can be reached, so a URL can be built for the viewer's position."
+      },
+      "ImageInfo": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "repository": {
+            "type": "string",
+            "title": "Repository"
+          },
+          "tag": {
+            "type": "string",
+            "title": "Tag"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "title": "Size Bytes"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "in_use": {
+            "type": "boolean",
+            "title": "In Use",
+            "default": false
+          },
+          "dangling": {
+            "type": "boolean",
+            "title": "Dangling",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "repository",
+          "tag",
+          "size_bytes"
+        ],
+        "title": "ImageInfo"
+      },
+      "ImageSection": {
+        "properties": {
+          "images": {
+            "items": {
+              "$ref": "#/components/schemas/ImageInfo"
+            },
+            "type": "array",
+            "title": "Images"
+          },
+          "total_bytes": {
+            "type": "integer",
+            "title": "Total Bytes",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "ImageSection"
+      },
+      "Listener": {
+        "properties": {
+          "protocol": {
+            "type": "string",
+            "title": "Protocol"
+          },
+          "bind_ip": {
+            "type": "string",
+            "title": "Bind Ip"
+          },
+          "port": {
+            "type": "integer",
+            "title": "Port"
+          },
+          "exposure": {
+            "$ref": "#/components/schemas/Exposure"
+          },
+          "pid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pid"
+          },
+          "process": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Process"
+          },
+          "container_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Container Name"
+          },
+          "is_finding": {
+            "type": "boolean",
+            "title": "Is Finding",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "protocol",
+          "bind_ip",
+          "port",
+          "exposure"
+        ],
+        "title": "Listener"
+      },
+      "MemoryPool": {
+        "properties": {
+          "unified": {
+            "type": "boolean",
+            "title": "Unified"
+          },
+          "total_bytes": {
+            "type": "integer",
+            "title": "Total Bytes"
+          },
+          "used_bytes": {
+            "type": "integer",
+            "title": "Used Bytes"
+          },
+          "available_bytes": {
+            "type": "integer",
+            "title": "Available Bytes"
+          },
+          "cached_bytes": {
+            "type": "integer",
+            "title": "Cached Bytes"
+          },
+          "gpu_reserved_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gpu Reserved Bytes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unified",
+          "total_bytes",
+          "used_bytes",
+          "available_bytes",
+          "cached_bytes"
+        ],
+        "title": "MemoryPool",
+        "description": "On unified-memory parts (GB10) CPU and GPU share ONE pool. Never render two."
+      },
+      "ModelInfo": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "title": "Size Bytes",
+            "default": 0
+          },
+          "last_used": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          },
+          "served_by": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Served By"
+          },
+          "max_position_embeddings": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Position Embeddings"
+          },
+          "architecture": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Architecture"
+          },
+          "quantization": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantization"
+          },
+          "num_parameters": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Num Parameters"
+          },
+          "active_parameters": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Parameters"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "source"
+        ],
+        "title": "ModelInfo"
+      },
+      "ModelSection": {
+        "properties": {
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/ModelInfo"
+            },
+            "type": "array",
+            "title": "Models"
+          },
+          "totals_by_source": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Totals By Source"
+          },
+          "scanning": {
+            "type": "boolean",
+            "title": "Scanning",
+            "default": false
+          },
+          "scanned_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scanned At"
+          }
+        },
+        "type": "object",
+        "title": "ModelSection"
+      },
+      "NetworkSection": {
+        "properties": {
+          "listeners": {
+            "items": {
+              "$ref": "#/components/schemas/Listener"
+            },
+            "type": "array",
+            "title": "Listeners"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Listener"
+            },
+            "type": "array",
+            "title": "Findings"
+          },
+          "local_addresses": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Local Addresses"
+          }
+        },
+        "type": "object",
+        "title": "NetworkSection"
+      },
+      "NodeInfo": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "default": "local"
+          },
+          "reachable": {
+            "type": "boolean",
+            "title": "Reachable",
+            "default": true
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "NodeInfo"
+      },
+      "PortBinding": {
+        "properties": {
+          "container_port": {
+            "type": "integer",
+            "title": "Container Port"
+          },
+          "protocol": {
+            "type": "string",
+            "title": "Protocol",
+            "default": "tcp"
+          },
+          "host_ip": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Host Ip"
+          },
+          "host_port": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Host Port"
+          },
+          "exposure": {
+            "$ref": "#/components/schemas/Exposure",
+            "default": "unknown"
+          }
+        },
+        "type": "object",
+        "required": [
+          "container_port"
+        ],
+        "title": "PortBinding"
+      },
+      "ProcessInfo": {
+        "properties": {
+          "pid": {
+            "type": "integer",
+            "title": "Pid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "cmdline": {
+            "type": "string",
+            "title": "Cmdline"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          },
+          "cpu_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cpu Percent"
+          },
+          "rss_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rss Bytes"
+          },
+          "gpu_memory_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gpu Memory Bytes"
+          },
+          "container_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Container Id"
+          },
+          "container_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Container Name"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pid",
+          "name",
+          "cmdline"
+        ],
+        "title": "ProcessInfo"
+      },
+      "ProcessSection": {
+        "properties": {
+          "gpu_processes": {
+            "items": {
+              "$ref": "#/components/schemas/ProcessInfo"
+            },
+            "type": "array",
+            "title": "Gpu Processes"
+          },
+          "top_cpu": {
+            "items": {
+              "$ref": "#/components/schemas/ProcessInfo"
+            },
+            "type": "array",
+            "title": "Top Cpu"
+          },
+          "total_processes": {
+            "type": "integer",
+            "title": "Total Processes",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "ProcessSection"
+      },
+      "PyEnvInfo": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "python_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Python Version"
+          },
+          "torch_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Torch Version"
+          },
+          "gpu_capable": {
+            "type": "boolean",
+            "title": "Gpu Capable",
+            "default": false
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "kind"
+        ],
+        "title": "PyEnvInfo"
+      },
+      "PyEnvSection": {
+        "properties": {
+          "envs": {
+            "items": {
+              "$ref": "#/components/schemas/PyEnvInfo"
+            },
+            "type": "array",
+            "title": "Envs"
+          }
+        },
+        "type": "object",
+        "title": "PyEnvSection"
+      },
+      "RunningInstance": {
+        "properties": {
+          "pid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pid"
+          },
+          "container": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Container"
+          },
+          "port": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Port"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "origin": {
+            "type": "string",
+            "title": "Origin",
+            "default": "dgxctl"
+          },
+          "log_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Log Path"
+          }
+        },
+        "type": "object",
+        "title": "RunningInstance",
+        "description": "An instance of a catalog entry that is already up."
+      },
+      "SectionPayloads": {
+        "properties": {
+          "gpu": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GpuSection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "processes": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProcessSection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "containers": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContainerSection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "images": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ImageSection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "disk": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DiskSection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "network": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NetworkSection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tailscale": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TailscaleSection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "services": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ServiceSection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "models": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ModelSection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pyenvs": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PyEnvSection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "SectionPayloads",
+        "description": "Documentation-only model.\n\n`Envelope.data` is deliberately `Any` so a collector can degrade without breaking the\nresponse shape. That would leave every section payload out of the OpenAPI document,\nand therefore out of the frontend's generated types. This model pins them into the\nschema; `GET /api/schema/sections` returns an empty instance so the generator sees it."
+      },
+      "ServiceInfo": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "port": {
+            "type": "integer",
+            "title": "Port"
+          },
+          "bind_ip": {
+            "type": "string",
+            "title": "Bind Ip"
+          },
+          "exposure": {
+            "$ref": "#/components/schemas/Exposure"
+          },
+          "pid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pid"
+          },
+          "container_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Container Name"
+          },
+          "health": {
+            "type": "string",
+            "title": "Health",
+            "default": "unprobed"
+          },
+          "served_models": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Served Models"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "default": "/"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "default": ""
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary",
+            "default": ""
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "default": "unknown"
+          },
+          "recognised": {
+            "type": "boolean",
+            "title": "Recognised",
+            "default": false
+          },
+          "is_self": {
+            "type": "boolean",
+            "title": "Is Self",
+            "default": false
+          },
+          "notable": {
+            "type": "boolean",
+            "title": "Notable",
+            "default": true
+          },
+          "linkable": {
+            "type": "boolean",
+            "title": "Linkable",
+            "default": true
+          },
+          "auth_query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auth Query"
+          },
+          "auth_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auth Hint"
+          },
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
+          },
+          "declared": {
+            "type": "boolean",
+            "title": "Declared",
+            "default": false
+          },
+          "online": {
+            "type": "boolean",
+            "title": "Online",
+            "default": true
+          },
+          "launchable": {
+            "type": "boolean",
+            "title": "Launchable",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "kind",
+          "port",
+          "bind_ip",
+          "exposure"
+        ],
+        "title": "ServiceInfo"
+      },
+      "ServiceSection": {
+        "properties": {
+          "services": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceInfo"
+            },
+            "type": "array",
+            "title": "Services"
+          },
+          "host": {
+            "$ref": "#/components/schemas/HostAddressInfo"
+          }
+        },
+        "type": "object",
+        "title": "ServiceSection"
+      },
+      "SizedRoot": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size Bytes"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "label"
+        ],
+        "title": "SizedRoot"
+      },
+      "Snapshot": {
+        "properties": {
+          "node": {
+            "$ref": "#/components/schemas/NodeInfo"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "sections": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Envelope"
+            },
+            "type": "object",
+            "title": "Sections"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node",
+          "version"
+        ],
+        "title": "Snapshot"
+      },
+      "Status": {
+        "type": "string",
+        "enum": [
+          "ok",
+          "degraded",
+          "error",
+          "unavailable"
+        ],
+        "title": "Status"
+      },
+      "TailscalePeer": {
+        "properties": {
+          "hostname": {
+            "type": "string",
+            "title": "Hostname"
+          },
+          "dns_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dns Name"
+          },
+          "os": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Os"
+          },
+          "ips": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Ips"
+          },
+          "online": {
+            "type": "boolean",
+            "title": "Online",
+            "default": false
+          },
+          "exit_node": {
+            "type": "boolean",
+            "title": "Exit Node",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "hostname"
+        ],
+        "title": "TailscalePeer"
+      },
+      "TailscaleSection": {
+        "properties": {
+          "backend_state": {
+            "type": "string",
+            "title": "Backend State"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "self_hostname": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Self Hostname"
+          },
+          "self_dns_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Self Dns Name"
+          },
+          "self_ips": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Self Ips"
+          },
+          "exit_node_active": {
+            "type": "boolean",
+            "title": "Exit Node Active",
+            "default": false
+          },
+          "peers": {
+            "items": {
+              "$ref": "#/components/schemas/TailscalePeer"
+            },
+            "type": "array",
+            "title": "Peers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "backend_state"
+        ],
+        "title": "TailscaleSection"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

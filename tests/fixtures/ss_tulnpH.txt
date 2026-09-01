@@ -1,0 +1,31 @@
+udp UNCONN 0      0                               127.0.0.1:39913 0.0.0.0:* users:(("iron-proxy",pid=659169,fd=7)) 
+udp UNCONN 0      0                                 0.0.0.0:41641 0.0.0.0:*                                        
+udp UNCONN 0      0                                 0.0.0.0:46779 0.0.0.0:*                                        
+udp UNCONN 0      0                              127.0.0.54:53    0.0.0.0:*                                        
+udp UNCONN 0      0                           127.0.0.53%lo:53    0.0.0.0:*                                        
+udp UNCONN 0      0                                 0.0.0.0:5353  0.0.0.0:*                                        
+udp UNCONN 0      0                                    [::]:38684    [::]:*                                        
+udp UNCONN 0      0                                    [::]:41641    [::]:*                                        
+udp UNCONN 0      0       [fe80::efb7:4d90:f109:d14]%wlP9s9:546      [::]:*                                        
+udp UNCONN 0      0      [fe80::b057:73d1:4e70:fc81]%enP7s7:546      [::]:*                                        
+udp UNCONN 0      0                                    [::]:5353     [::]:*                                        
+tcp LISTEN 0      4096                           172.17.0.1:9091  0.0.0.0:* users:(("iron-proxy",pid=659169,fd=9)) 
+tcp LISTEN 0      4096                           172.17.0.1:9090  0.0.0.0:* users:(("iron-proxy",pid=659169,fd=4)) 
+tcp LISTEN 0      2048                            127.0.0.1:42835 0.0.0.0:* users:(("hermes",pid=1442365,fd=6))    
+tcp LISTEN 0      4096                              0.0.0.0:6006  0.0.0.0:*                                        
+tcp LISTEN 0      2048                            127.0.0.1:37261 0.0.0.0:* users:(("hermes",pid=1742531,fd=6))    
+tcp LISTEN 0      4096                            127.0.0.1:37223 0.0.0.0:* users:(("iron-proxy",pid=659169,fd=12))
+tcp LISTEN 0      4096                            127.0.0.1:34523 0.0.0.0:* users:(("iron-proxy",pid=659169,fd=10))
+tcp LISTEN 0      4096                              0.0.0.0:22    0.0.0.0:*                                        
+tcp LISTEN 0      4096                           127.0.0.54:53    0.0.0.0:*                                        
+tcp LISTEN 0      4096                        127.0.0.53%lo:53    0.0.0.0:*                                        
+tcp LISTEN 0      4096                            127.0.0.1:9092  0.0.0.0:* users:(("iron-proxy",pid=659169,fd=11))
+tcp LISTEN 0      4096                            127.0.0.1:11000 0.0.0.0:*                                        
+tcp LISTEN 0      4096                            127.0.0.1:11434 0.0.0.0:*                                        
+tcp LISTEN 0      4096                         100.64.0.1:45077 0.0.0.0:*                                        
+tcp LISTEN 0      4096                            127.0.0.1:8010  0.0.0.0:*                                        
+tcp LISTEN 0      4096                            127.0.0.1:631   0.0.0.0:*                                        
+tcp LISTEN 0      4096                                [::1]:631      [::]:*                                        
+tcp LISTEN 0      4096                                 [::]:6006     [::]:*                                        
+tcp LISTEN 0      4096          [fd7a:115c:a1e0::1111:2222]:54847    [::]:*                                        
+tcp LISTEN 0      4096                                 [::]:22       [::]:*                                        

@@ -1,0 +1,103 @@
+# Launchable container catalog.
+#
+# Entries are declarative and version-controlled: dgxctl never accepts free-form
+# `docker run` arguments from the browser. Only declared params are substitutable.
+#
+# Copy to ~/.config/dgxctl/catalog.toml to customise.
+
+[[entry]]
+id = "vllm-server"
+name = "vLLM model server"
+description = "OpenAI-compatible server for a HuggingFace model."
+image = "vllm-spark:local"
+port = 8010
+bind = "127.0.0.1"
+runtime = "nvidia"
+ipc = "host"
+gpu_memory_utilization = 0.50
+volumes = ["~/.cache/huggingface:/root/.cache/huggingface"]
+restart = "unless-stopped"
+
+args = [
+  "vllm", "serve", "{model}",
+  "--host", "0.0.0.0",         # container-internal; host exposure is set by `bind`
+  "--port", "{port}",
+  "--served-model-name", "{served_name}",
+  "--trust-remote-code",
+  "--gpu-memory-utilization", "{gpu_memory_utilization}",
+  "--kv-cache-dtype", "fp8",
+  "--max-model-len", "{max_model_len}",
+  "--max-num-batched-tokens", "8192",
+  "--enable-prefix-caching",
+]
+
+[entry.env]
+VLLM_USE_DEEP_GEMM = "0"      # required on sm_121 (GB10)
+
+[[entry.params]]
+name = "model"
+kind = "model_ref"
+required = true
+description = "HuggingFace repo id, e.g. Qwen/Qwen3-8B"
+
+[[entry.params]]
+name = "served_name"
+kind = "string"
+required = false
+default = "local"
+description = "Alias clients use in the `model` field"
+
+[[entry.params]]
+name = "port"
+kind = "int"
+required = false
+default = "8010"
+
+[[entry.params]]
+name = "max_model_len"
+kind = "int"
+required = false
+default = "32768"
+description = "Set to the model's real max_position_embeddings; costs no extra memory"
+
+# --- host processes -----------------------------------------------------------
+# Not everything worth launching is a container. NVIDIA Sync's own DGX Dashboard runs
+# JupyterLab from a host virtualenv, because that is what gives a notebook direct GPU
+# access without container plumbing. dgxctl does the same.
+
+[[entry]]
+id = "jupyterlab"
+kind = "process"
+name = "JupyterLab"
+description = "Notebook server from a host virtualenv, with direct GPU access."
+port = 11002
+bind = "127.0.0.1"
+cwd = "{root_dir}"
+command = [
+  "{venv}/bin/jupyter-lab",
+  "--port", "{port}",
+  "--no-browser",
+  "--ServerApp.ip=127.0.0.1",          # host exposure is set by `bind`, not by the app
+  "--ServerApp.root_dir={root_dir}",
+  "--ServerApp.default_url=/lab",
+]
+
+[[entry.params]]
+name = "venv"
+kind = "venv_ref"
+required = false
+default = "~/jupyterlab/.venv"
+description = "Virtualenv containing jupyter-lab. GPU-capable environments are offered first."
+
+[[entry.params]]
+name = "root_dir"
+kind = "string"
+required = false
+default = "~/jupyterlab"
+description = "Notebook working directory"
+
+[[entry.params]]
+name = "port"
+kind = "int"
+required = false
+default = "11002"

@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+/* Design tokens. FE-C4: the exposure vocabulary is defined ONCE, here, and used
+   identically everywhere a bind address is shown. */
+@theme {
+  --color-surface: #0b0d10;
+  --color-panel: #14181d;
+  --color-panel-2: #1b2027;
+  --color-edge: #262d36;
+  --color-ink: #e7ecf3;
+  --color-ink-dim: #9aa7b8;
+  --color-ink-faint: #64707f;
+  --color-accent: #5eead4;
+  --color-accent-dim: #0f766e;
+
+  --color-exp-loopback: #64748b;
+  --color-exp-lan: #f59e0b;
+  --color-exp-tailnet: #f59e0b;
+  --color-exp-all: #f43f5e;
+  --color-exp-unknown: #475569;
+
+  --color-ok: #34d399;
+  --color-warn: #f59e0b;
+  --color-bad: #f43f5e;
+}
+
+html, body, #root { height: 100%; }
+body {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+*:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; border-radius: 4px; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--color-edge); border-radius: 6px; }

@@ -1,0 +1,39 @@
+# systemd --user unit. No sudo anywhere: a system unit would need root, and on many
+# DGX systems sudo is password-protected with no passwordless entry.
+#
+# Install:  cp deploy/dgxctl.service ~/.config/systemd/user/
+#           systemctl --user daemon-reload && systemctl --user enable --now dgxctl
+# Survives logout when lingering is enabled: loginctl enable-linger $USER
+
+[Unit]
+Description=DGX Control - observability and safe control for NVIDIA DGX Spark
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/share/dgxctl/venv/bin/dgxctl serve
+Restart=on-failure
+RestartSec=5
+
+# KillMode is deliberately left at systemd's default (control-group), so stopping or
+# restarting dgxctl also stops the processes dgxctl launched. That is the intended model:
+# dgxctl owns what it started, and a "Stop" button that could be bypassed by simply
+# restarting the service would be a lie. Processes started OUTSIDE dgxctl live in a
+# different cgroup and are unaffected. Do not set KillMode=process.
+# The app closes its own streams on shutdown; this is only a backstop so a wedged
+# connection cannot hold a restart for systemd's 90-second default.
+TimeoutStopSec=20
+# The service reads /proc, the Docker socket and the HF cache. It writes only to its own
+# state directory, and it never needs elevated privileges.
+NoNewPrivileges=true
+Environment=PYTHONUNBUFFERED=1
+
+# Do NOT set PrivateTmp / PrivateMounts here. They put the unit in its own mount namespace,
+# and `ss -tulnp` then reports every socket with NO owning process -- which silently guts the
+# exposure audit: ports still show as exposed, but "who is listening" becomes blank. Verified
+# on a DGX Spark: with PrivateTmp=true the users:(("jupyter-lab",pid=...)) field disappears.
+# If you harden this unit, re-check that the Network page still names process owners.
+
+[Install]
+WantedBy=default.target

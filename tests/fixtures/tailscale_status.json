@@ -1,0 +1,125 @@
+{
+  "Version": "1.102.2-t6cac91817-g6ff0ddc72",
+  "BackendState": "Running",
+  "HaveNodeKey": true,
+  "TailscaleIPs": [
+    "100.64.0.1",
+    "fd7a:115c:a1e0::1111:2222"
+  ],
+  "Self": {
+    "HostName": "dgx-spark-01",
+    "DNSName": "dgx-spark-01.example-tailnet.ts.net.",
+    "OS": "linux",
+    "TailscaleIPs": [
+      "100.64.0.1",
+      "fd7a:115c:a1e0::1111:2222"
+    ],
+    "PeerRelay": "",
+    "RxBytes": 0,
+    "TxBytes": 0,
+    "Online": true,
+    "ExitNode": false,
+    "ExitNodeOption": false,
+    "Active": false,
+    "TaildropTarget": 0,
+    "NoFileSharingReason": "",
+    "Capabilities": [
+      "HTTPS://TAILSCALE.COM/s/DEPRECATED-NODE-CAPS#see-https://github.com/tailscale/tailscale/issues/11508",
+      "default-auto-update",
+      "https",
+      "https://tailscale.com/cap/file-sharing",
+      "https://tailscale.com/cap/ssh",
+      "probe-udp-lifetime",
+      "ssh-behavior-v1",
+      "ssh-env-vars",
+      "store-appc-routes",
+      "suggest-exit-node-ui",
+      "tailnet-display-name"
+    ],
+    "CapMap": {
+      "default-auto-update": [
+        true
+      ],
+      "https": null,
+      "https://tailscale.com/cap/file-sharing": null,
+      "https://tailscale.com/cap/ssh": null,
+      "probe-udp-lifetime": null,
+      "ssh-behavior-v1": null,
+      "ssh-env-vars": null,
+      "store-appc-routes": null,
+      "suggest-exit-node-ui": null,
+      "tailnet-display-name": [
+        "BlackerBox"
+      ]
+    },
+    "InNetworkMap": true,
+    "InMagicSock": false,
+    "InEngine": false
+  },
+  "ExtraRecords": null,
+  "Peer": {
+    "nodekey:scrubbed1": {
+      "HostName": "peer-1",
+      "OS": "iOS",
+      "TailscaleIPs": [
+        "100.64.0.10",
+        "fd7a:115c:a1e0::1000:1"
+      ],
+      "PeerRelay": "",
+      "RxBytes": 0,
+      "TxBytes": 0,
+      "Online": false,
+      "ExitNode": false,
+      "ExitNodeOption": false,
+      "Active": false,
+      "TaildropTarget": 5,
+      "NoFileSharingReason": "",
+      "InNetworkMap": true,
+      "InMagicSock": true,
+      "InEngine": false,
+      "DNSName": "peer-1.example-tailnet.ts.net."
+    },
+    "nodekey:scrubbed2": {
+      "HostName": "peer-2",
+      "OS": "windows",
+      "TailscaleIPs": [
+        "100.64.0.11",
+        "fd7a:115c:a1e0::1001:1"
+      ],
+      "PeerRelay": "",
+      "RxBytes": 0,
+      "TxBytes": 0,
+      "Online": false,
+      "ExitNode": false,
+      "ExitNodeOption": false,
+      "Active": false,
+      "TaildropTarget": 5,
+      "NoFileSharingReason": "",
+      "InNetworkMap": true,
+      "InMagicSock": true,
+      "InEngine": false,
+      "DNSName": "peer-2.example-tailnet.ts.net."
+    },
+    "nodekey:scrubbed3": {
+      "HostName": "peer-3",
+      "OS": "linux",
+      "TailscaleIPs": [
+        "100.64.0.12",
+        "fd7a:115c:a1e0::1002:1"
+      ],
+      "PeerRelay": "",
+      "RxBytes": 0,
+      "TxBytes": 0,
+      "Online": true,
+      "ExitNode": false,
+      "ExitNodeOption": false,
+      "Active": false,
+      "TaildropTarget": 9,
+      "NoFileSharingReason": "",
+      "InNetworkMap": true,
+      "InMagicSock": true,
+      "InEngine": false,
+      "DNSName": "peer-3.example-tailnet.ts.net."
+    }
+  }
+}

@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node / frontend
+node_modules/
+web/dist/
+web/src/api/types.gen.ts
+
+# Local state — never commit
+*.db
+*.db-wal
+*.db-shm
+*.sqlite3
+actions.jsonl
+
+# Secrets — never commit
+.env
+.env.*
+token
+*.pem
+config.local.toml
+
+# OS
+.DS_Store
+
+# Machine-specific notes, not part of the project
+LOCAL.md
+openapi.json.tmp
+
+# Build artifacts
+*.tsbuildinfo
+
+# One-off local helper, not part of the project
+republish-clean.sh

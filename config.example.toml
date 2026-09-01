@@ -1,0 +1,45 @@
+# dgxctl configuration — copy to ~/.config/dgxctl/config.toml
+#
+# Every value below is a default; delete what you do not need to change.
+
+host = "127.0.0.1"       # see README "Choosing how to expose it" before changing this
+port = 8770
+node_name = "dgx-spark"  # shown in the header, and in the node switcher on a fleet
+
+# Control actions (container start/stop, launching, process kill) are OFF by default.
+control_enabled = false
+
+disk_warn_percent = 85
+hf_cache = "~/.cache/huggingface"
+sized_roots = ["~/.cache/huggingface", "~/projects"]
+pyenv_roots = ["~", "~/projects"]
+
+# --- services dgxctl cannot discover on its own -------------------------------
+# A declared service appears on the Services page even while it is offline, so its link
+# and its start button stay reachable. `launch` is an argv list, never a shell string.
+#
+# [[service]]
+# id     = "openclaw"
+# name   = "OpenClaw"
+# port   = 8123
+# path   = "/"
+# launch = ["ollama", "launch", "openclaw", "--model", "nemotron-3-super"]
+# note   = "Started on demand; the port appears once it is up."
+#
+# [[service]]
+# id   = "lmstudio"
+# name = "LM Studio"
+# port = 1234
+# path = "/"
+
+# --- other DGX systems --------------------------------------------------------
+# A peer is just another dgxctl instance behind its own authenticated API.
+#
+# [[node]]
+# id         = "spark-2"
+# name       = "Spark by the window"
+# url        = "http://spark-2.your-tailnet.ts.net:8770"
+# token_file = "~/.config/dgxctl/peers/spark-2.token"
+
+# --- optional: restrict tailnet access to named identities --------------------
+# tailscale_allowlist = ["you@example.com"]

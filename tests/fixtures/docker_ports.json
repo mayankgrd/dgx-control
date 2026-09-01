@@ -1,0 +1,31 @@
+{
+  "tb": {
+    "6006/tcp": [
+      {
+        "HostIp": "0.0.0.0",
+        "HostPort": "6006"
+      },
+      {
+        "HostIp": "::",
+        "HostPort": "6006"
+      }
+    ],
+    "8888/tcp": null
+  },
+  "vllm-server": {
+    "8010/tcp": [
+      {
+        "HostIp": "127.0.0.1",
+        "HostPort": "8010"
+      }
+    ]
+  },
+  "empty-hostip": {
+    "9000/tcp": [
+      {
+        "HostIp": "",
+        "HostPort": "9000"
+      }
+    ]
+  }
+}
