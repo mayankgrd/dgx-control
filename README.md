@@ -7,7 +7,7 @@
 ![python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![platform](https://img.shields.io/badge/platform-linux%20%C2%B7%20aarch64%20%7C%20x86__64-lightgrey)
 ![no sudo](https://img.shields.io/badge/install-unprivileged-success)
-[![licence](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
+[![licence](https://img.shields.io/badge/licence-Apache%202.0-blue)](LICENSE)
 
 </div>
 
@@ -209,4 +209,7 @@ Branches: `develop` for work, `main` for deployment.
 
 ## Licence
 
-MIT — see [LICENSE](LICENSE).
+Apache License 2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
+
+Apache 2.0 rather than MIT for its explicit patent grant, which corporate legal review
+generally prefers, and because contributions arrive under the same terms without a separate CLA.

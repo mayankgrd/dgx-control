@@ -4,7 +4,8 @@ version = "0.1.0"
 description = "Granular observability and safe control for NVIDIA DGX Spark systems"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = { text = "Apache-2.0" }
+classifiers = ["License :: OSI Approved :: Apache Software License"]
 dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.30",

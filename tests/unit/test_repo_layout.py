@@ -22,11 +22,47 @@ def markdown_files() -> list[Path]:
     return [f for f in files if f.name != "LOCAL.md"]
 
 
+# SPDX identifier -> a phrase that must appear in the licence text itself.
+LICENCE_MARKERS = {
+    "Apache-2.0": "Apache License",
+    "MIT": "MIT License",
+    "BSD-3-Clause": "BSD",
+}
+
+
 def test_licence_exists_and_matches_package_metadata():
     licence = REPO / "LICENSE"
     assert licence.exists(), "pyproject claims a licence; ship one"
     declared = tomllib.loads((REPO / "pyproject.toml").read_text())["project"]["license"]["text"]
-    assert declared.lower() in licence.read_text().lower().split("\n")[0].lower() + " license"
+    marker = LICENCE_MARKERS.get(declared)
+    assert marker, f"unrecognised licence id {declared!r}; add it to LICENCE_MARKERS"
+    assert marker.lower() in licence.read_text().lower(), (
+        f"pyproject declares {declared} but LICENSE does not look like it"
+    )
+
+
+def test_apache_notice_file_is_shipped():
+    """Apache 2.0 §4(d): a NOTICE file, if present, must be carried into redistributions.
+    Shipping one is what makes that clause meaningful for downstream users."""
+    declared = tomllib.loads((REPO / "pyproject.toml").read_text())["project"]["license"]["text"]
+    if declared != "Apache-2.0":
+        return
+    notice = REPO / "NOTICE"
+    assert notice.exists(), "Apache-2.0 projects should ship a NOTICE file"
+    text = notice.read_text()
+    assert "Apache License" in text and "Copyright" in text
+
+
+def test_the_licence_text_is_complete():
+    """A truncated licence is worse than none: check the clauses that motivated the choice."""
+    text = (REPO / "LICENSE").read_text()
+    for clause in (
+        "Grant of Patent License",
+        "Redistribution",
+        "Disclaimer of Warranty",
+        "Limitation of Liability",
+    ):
+        assert clause in text, f"LICENSE is missing the {clause!r} section"
 
 
 def test_no_broken_relative_links_in_markdown():

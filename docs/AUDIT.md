@@ -7,6 +7,41 @@ file · commits · technical notes (patterns, decisions, gotchas).
 
 ---
 
+## 2026-09-01 — Relicensed to Apache 2.0
+
+### User request
+1. Asked for the difference between MIT and Apache 2.0, and which to use. Chose Apache 2.0.
+
+### Completed
+- [x] `LICENSE` replaced with the canonical Apache 2.0 text, `NOTICE` added, `pyproject.toml`
+      updated with the SPDX id and OSI classifier, README badge and licence section updated.
+- [x] Tests: the licence check now maps an SPDX id to a phrase expected in the file, so it works
+      for any licence rather than only the one in place when it was written. Added checks that a
+      NOTICE ships and that the licence text is complete.
+
+### Technical notes
+
+**The reasoning, briefly.** Both are permissive with the same practical core. Apache adds an
+explicit patent grant, patent retaliation, a state-your-changes requirement, a trademark
+disclaimer, and §5, which puts inbound contributions under the same terms without a CLA. For a
+tool whose users are companies with DGX hardware, the explicit patent grant is what removes
+friction from legal review. Patent risk for an ops dashboard is near nil either way; the choice is
+about how easily others can adopt it.
+
+**Timing was the strongest argument.** Relicensing needs every copyright holder's agreement. With
+0 forks and 1 contributor that was a formality; after the first outside contribution it would not
+have been. Doing it before the release cost nothing.
+
+**The licence text was fetched, not written.** A legal document reproduced from memory is a bad
+idea, and a truncated one is worse than none — hence a test asserting the patent grant,
+redistribution, warranty and liability sections are all present.
+
+**SDD-124 says "add the MIT licence" and still does.** The project's rule is that entries are
+marked, not rewritten, so it carries a note pointing at SDD-161 instead of being edited to look
+like it always said Apache.
+
+---
+
 ## 2026-09-01 — README trimmed, methodology moved out
 
 ### User request

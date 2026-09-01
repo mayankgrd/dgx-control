@@ -65,6 +65,7 @@ SDD-NNN)` · `DEFERRED`.
 | SDD-151 | Restrictive modes on files dgxctl writes | 9 Security | S2 | COMPLETE |
 | SDD-152 | Auth sweep must see app-level routes | 9 Security | S1 | COMPLETE |
 | SDD-160 | README trimmed; methodology moved to docs | 9 Release | — | COMPLETE |
+| SDD-161 | Relicence MIT → Apache 2.0 | 9 Release | — | COMPLETE |
 | SDD-130 | Known-service catalog with explanations | 8 Services | R15.1, R15.4–R15.7 | COMPLETE |
 | SDD-131 | Classify by command line, not port alone | 8 Services | R15.3 | COMPLETE |
 | SDD-132 | Host address inventory | 8 Services | R16.1 | COMPLETE |
@@ -636,7 +637,8 @@ unattended. Steps: detect → choose bind → token → control gate → NVIDIA 
 
 **Design.** Process documentation moves under `docs/`, leaving a root that reads as a product:
 README, CLAUDE.md, config.example.toml, pyproject.toml. Add the MIT licence the package metadata
-already claims. Add a link checker so the move cannot silently break references.
+already claims. *(Superseded in part by SDD-161: the project relicensed to Apache 2.0 before its
+first release. The requirement — ship the licence the metadata declares — is unchanged.)* Add a link checker so the move cannot silently break references.
 
 **Acceptance criteria**
 1. `test_licence_file_exists_and_matches_package_metadata`;
@@ -799,6 +801,32 @@ someone wrote down rather than an omission.
 **Acceptance criteria**
 1. `test_the_route_sweep_actually_sees_the_app_level_routes`;
 2. every route not in `PUBLIC_BY_DESIGN` returns 401/403 without a token.
+
+## SDD-161 · Relicence MIT → Apache 2.0
+**Phase** 9 · **Status** COMPLETE
+
+**Why.** The audience is companies and labs running DGX hardware, where legal review treats
+Apache 2.0 as the safe default because its patent grant is explicit; MIT is silent on patents and
+whether an implied licence exists is untested. Apache §5 also puts contributions under the same
+terms without a separate CLA, which matters for a project that invites them.
+
+Done before the first release and before any outside contribution, while the sole copyright holder
+could still relicense unilaterally — 0 forks, 1 contributor. After that it would need every
+contributor's agreement.
+
+**Changes.** `LICENSE` replaced with the canonical text fetched from apache.org (not reproduced
+from memory); `NOTICE` added, since §4(d) only means something if one is shipped;
+`pyproject.toml` declares `Apache-2.0` plus the OSI classifier; README badge and licence section
+updated. No per-file SPDX headers: the appendix suggests them, they are not required, and they
+would touch every file for no practical gain on a project this size.
+
+**Acceptance criteria**
+1. `test_licence_exists_and_matches_package_metadata` — now maps the SPDX id to a phrase that must
+   appear in the licence text, so a mismatch between metadata and file is caught for any licence.
+2. `test_apache_notice_file_is_shipped`;
+3. `test_the_licence_text_is_complete` — a truncated licence is worse than none, so the sections
+   that motivated the choice are asserted present.
+4. Installed package metadata reports `Apache-2.0` and the OSI classifier.
 
 ## SDD-060 · vLLM `/metrics` scraping — DEFERRED
 Scrape running vLLM servers' Prometheus endpoint for queue depth, throughput, and TTFT — far richer
