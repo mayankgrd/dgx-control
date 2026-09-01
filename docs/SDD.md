@@ -66,6 +66,7 @@ SDD-NNN)` · `DEFERRED`.
 | SDD-152 | Auth sweep must see app-level routes | 9 Security | S1 | COMPLETE |
 | SDD-160 | README trimmed; methodology moved to docs | 9 Release | — | COMPLETE |
 | SDD-161 | Relicence MIT → Apache 2.0 | 9 Release | — | COMPLETE |
+| SDD-162 | CLAUDE.md shortened for release | 9 Release | — | COMPLETE |
 | SDD-130 | Known-service catalog with explanations | 8 Services | R15.1, R15.4–R15.7 | COMPLETE |
 | SDD-131 | Classify by command line, not port alone | 8 Services | R15.3 | COMPLETE |
 | SDD-132 | Host address inventory | 8 Services | R16.1 | COMPLETE |

@@ -7,6 +7,45 @@ file · commits · technical notes (patterns, decisions, gotchas).
 
 ---
 
+## 2026-09-01 — CLAUDE.md shortened
+
+### User request
+1. Simplify CLAUDE.md before the release. Keep the spec-driven-development intent intact; only
+   shorten.
+
+### Completed
+- [x] 212 lines down to 154, with the loop, the source-of-truth order, the session workflow and the
+      hardware facts all intact.
+
+### What was cut, and why
+
+**The subagent delegation playbook (22 lines).** Inherited boilerplate describing worktree
+isolation, model selection per slice, file-ownership per wave and a degradation ladder. None of it
+was ever used — the whole project was built inline, and no commit mentions a worktree or a subagent.
+A working agreement that describes a process nobody follows teaches the next reader the wrong thing.
+
+**Generic advice.** "Think before coding", "simplicity first", "surgical changes" apply to any
+project and earn nothing here. The hardware facts and the seam doctrine are the parts that could not
+be guessed, so they stayed.
+
+**Duplication.** The live-verification bar was stated twice, once at the top and again in a closing
+"the live bar is not optional" section. Now once.
+
+### What was corrected
+
+The spec ranges were stale: `R1…R8, S1…S9, N1…N7` had become `R1…R16, S1…S11, N1…N8`. The stack line
+said Python 3.12 where `requires-python` is `>=3.11`. A file that tells the next reader where truth
+lives should not itself be out of date.
+
+### What was added
+
+Two lessons this session paid for, in one line each: the wiring seam (a function grows a parameter,
+its unit tests pass, the caller never passes it, the feature is complete and inert — three times
+now), and how to write a security probe (an HTTP client normalises `..` out of a path, so a
+traversal test written with one passes against a vulnerable server).
+
+---
+
 ## 2026-09-01 — Relicensed to Apache 2.0
 
 ### User request
