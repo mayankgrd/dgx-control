@@ -13,13 +13,17 @@ and safe control of the box, registered into NVIDIA Sync as a custom tool.
 
 ## The loop
 
-spec → architecture → numbered SDD entry → tests-first code → live verification → audit.
+spec → architecture → numbered SDD entry → tests first, then code → live check on hardware → audit.
 
-Nothing is written because it seemed like a good idea at the time. A requirement is numbered, an
-architecture decision records how it will be met, an SDD entry states the tests that will prove it,
-and the audit records what actually happened — including the wrong turns, which are what a later
-reader needs most. Live verification feeds backwards: a regression found on hardware becomes a new
-SDD entry with a named regression test. The README summarises this for outside readers.
+Every change starts as a numbered requirement and ends as a test that proves it. Acceptance
+criteria in an SDD entry are the *names of the tests*, so "done" is not a judgement call. Hardware
+is part of the loop, not a final smoke test: the suite cannot see driver quirks, real cgroup
+layouts, or a genuinely exposed socket, and two rounds of live verification found eleven defects
+the whole suite missed. A bug found on hardware becomes a new SDD entry with its own regression
+test. What was learned goes back into the spec.
+
+Outside contributors are pointed at `docs/spec.md` first — the README asks for requirements, not
+patches. If you are handed a new requirement with no SDD entry, write the entry before the code.
 
 ## Documentation Structure (source of truth, in priority order)
 
