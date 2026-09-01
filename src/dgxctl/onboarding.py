@@ -343,6 +343,10 @@ def write_config(path: Path, content: str) -> Path | None:
         backup = path.with_suffix(f".toml.bak-{stamp}")
         shutil.copy2(path, backup)
     path.write_text(content)
+    # This file can hold a peer instance's API token and decides the bind address, so it is
+    # not left to the umask: on a stock Ubuntu (umask 002) it would land group-writable and
+    # world-readable.
+    path.chmod(0o600)
     return backup
 
 

@@ -61,6 +61,9 @@ SDD-NNN)` · `DEFERRED`.
 | SDD-140 | Private-data guard for a public repo | 9 Release | N8 | COMPLETE |
 | SDD-141 | Advertised addresses for links and forwards | 8 Services | R16.5 | COMPLETE |
 | SDD-142 | README with hero and feature screenshots | 9 Release | — | COMPLETE |
+| SDD-150 | Path traversal in the SPA handler | 9 Security | S1 | COMPLETE |
+| SDD-151 | Restrictive modes on files dgxctl writes | 9 Security | S2 | COMPLETE |
+| SDD-152 | Auth sweep must see app-level routes | 9 Security | S1 | COMPLETE |
 | SDD-130 | Known-service catalog with explanations | 8 Services | R15.1, R15.4–R15.7 | COMPLETE |
 | SDD-131 | Classify by command line, not port alone | 8 Services | R15.3 | COMPLETE |
 | SDD-132 | Host address inventory | 8 Services | R16.1 | COMPLETE |
@@ -738,6 +741,63 @@ with them by default. It has to be a test.
 `tests/fixtures/tailscale_status.json` — other people's machines, missed by an earlier manual
 scrub that only replaced the `TailscaleIPs` field. Also a real tailnet address in a docstring
 example, and the reference machine's LAN addresses in tests (now RFC 5737 documentation values).
+
+## SDD-150 · Path traversal in the SPA handler — CRITICAL
+**Phase** 9 · **Status** COMPLETE · **Spec** S1
+
+**The defect.** The catch-all that serves the built UI joined attacker-controlled path segments
+onto the web root and served whatever came back, with **no authentication**. Two ways out:
+
+- `GET /../../etc/passwd` — ordinary `..` traversal.
+- `GET //etc/passwd` — an **absolute** path. `Path("/srv/web") / "/etc/passwd"` does not join;
+  it substitutes, discarding the base entirely. This one needs no traversal at all.
+
+Confirmed reading `/etc/passwd`, `/etc/hosts`, and — decisively — the service's own API token at
+`~/.config/dgxctl/token`. Reading the token converts an unauthenticated file read into a **complete
+authentication bypass**, including control actions, on an instance bound beyond loopback.
+
+**Why review missed it.** The `test_every_route_requires_auth` sweep enumerated the *routers*.
+The SPA route is registered on the app, so the sweep never saw it (SDD-152). And a probe written
+with an HTTP client passes against a vulnerable server, because the client normalises `..` out of
+the path before it is sent — the request never arrives in its attacking form.
+
+**The fix.** Resolve the candidate and require `Path.is_relative_to(web_root)` before serving.
+
+**Acceptance criteria** (all in `tests/integration/test_path_traversal.py`, which drives the ASGI
+app directly so no client normalises the payload):
+1. `test_dot_dot_traversal_is_refused` — six encodings.
+2. `test_absolute_path_injection_is_refused` — the substitution case.
+3. `test_the_services_own_token_cannot_be_read` — the escalation that made this critical.
+4. `test_legitimate_assets_are_still_served`, `test_unknown_paths_still_fall_back_to_the_spa`,
+   `test_api_paths_are_not_swallowed_by_the_spa` — the fix must not break the UI.
+5. `test_process_log_names_reject_separators` — defence in depth on the one other request-driven
+   filesystem read.
+6. Verified failing against the pre-fix code, then passing, then confirmed on the live service
+   with `curl --path-as-is`.
+
+## SDD-151 · Restrictive modes on files dgxctl writes
+**Phase** 9 · **Status** COMPLETE · **Spec** S2
+
+`config.toml`, `actions.jsonl`, `processes.json` and `history.db` were created under the process
+umask, landing at 664/644 on a stock Ubuntu — group-writable and world-readable. `config.toml` can
+hold a **peer instance's API token** and decides the bind address; the action log records who asked
+for what. All are now created 0600, matching the token file.
+
+**Acceptance criteria**
+1. `test_files_written_by_dgxctl_are_not_world_readable`;
+2. existing `test_token_file_with_loose_permissions_is_refused` still holds.
+
+## SDD-152 · The auth sweep must see app-level routes
+**Phase** 9 · **Status** COMPLETE · **Spec** S1
+
+`collect_routes` walked only the routers, so any route registered directly on the app was outside
+the sweep — which is how an unauthenticated file-serving route survived it. It now walks
+`app.routes` as well, with an explicit `PUBLIC_BY_DESIGN` set so a public route is a decision
+someone wrote down rather than an omission.
+
+**Acceptance criteria**
+1. `test_the_route_sweep_actually_sees_the_app_level_routes`;
+2. every route not in `PUBLIC_BY_DESIGN` returns 401/403 without a token.
 
 ## SDD-060 · vLLM `/metrics` scraping — DEFERRED
 Scrape running vLLM servers' Prometheus endpoint for queue depth, throughput, and TTFT — far richer

@@ -199,7 +199,10 @@ async def process_logs(
 ):
     from dgxctl import processes as procreg
 
-    text = await asyncio.to_thread(procreg.read_log, entry_id, tail)
+    try:
+        text = await asyncio.to_thread(procreg.read_log, entry_id, tail)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     if not text:
         raise HTTPException(status_code=404, detail=f"no log for {entry_id!r}")
     return Response(content=text, media_type="text/plain; charset=utf-8")

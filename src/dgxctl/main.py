@@ -203,16 +203,29 @@ def create_app(settings: Settings | None = None, start_poller: bool = True) -> F
         if assets.is_dir():
             app.mount("/assets", StaticFiles(directory=assets), name="assets")
 
+        root = dist.resolve()
+
         @app.get("/{full_path:path}", include_in_schema=False)
         async def spa(full_path: str):
             # /api/* is matched by the routers above; anything reaching here and starting
             # with api/ is a genuine 404, not a route for the SPA to handle.
             if full_path.startswith("api/"):
                 return JSONResponse({"detail": "Not Found"}, status_code=404)
-            candidate = dist / full_path
-            if full_path and candidate.is_file():
+
+            # This route is UNAUTHENTICATED, and `full_path` is attacker-controlled, so the
+            # resolved target must be proven to sit inside the built UI before it is served.
+            # Two ways it escapes otherwise, both confirmed exploitable:
+            #   `/../../etc/passwd`  — ordinary traversal, and
+            #   `//etc/passwd`       — an ABSOLUTE path, which `Path.__truediv__` does not
+            #                          join but silently substitutes, discarding the base.
+            # Either one read arbitrary files, including this service's own API token.
+            try:
+                candidate = (root / full_path).resolve()
+            except (OSError, RuntimeError, ValueError):
+                return FileResponse(root / "index.html")
+            if full_path and candidate.is_file() and candidate.is_relative_to(root):
                 return FileResponse(candidate)
-            return FileResponse(dist / "index.html")
+            return FileResponse(root / "index.html")
     else:
 
         @app.get("/", include_in_schema=False)

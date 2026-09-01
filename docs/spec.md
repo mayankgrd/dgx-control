@@ -308,6 +308,12 @@ of that choice and are not optional.
 - **S7** Every control action is written to an append-only action log with timestamp, identity,
   action, target, and result.
 - **S8** No shell string interpolation of user input anywhere. Subprocess calls take argument lists.
+- **S10** Static assets are served **only** from inside the built UI directory. The resolved
+  target of any request-driven file read is proven to sit within its intended root before it is
+  served — `..` traversal and absolute-path substitution both escape otherwise, and the route that
+  serves the UI is unauthenticated by necessity.
+- **S11** Files dgxctl creates that carry credentials, decide its exposure, or record who did what
+  are mode `0600`, not left to the umask.
 - **S9** The service never reads, and never returns, the contents of credential files — `.env`,
   `~/.cache/huggingface/token`, SSH keys — even when they fall inside a configured scan root.
 

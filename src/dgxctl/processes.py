@@ -46,6 +46,7 @@ def _save(data: dict[str, dict]) -> None:
     p.parent.mkdir(parents=True, exist_ok=True)
     tmp = p.with_suffix(".tmp")
     tmp.write_text(json.dumps(data, indent=2))
+    tmp.chmod(0o600)
     tmp.replace(p)
 
 
@@ -235,7 +236,7 @@ def launch(
     """Spawn detached, so the process outlives the request that started it."""
     if isinstance(argv, str):
         raise TypeError("launch requires an argument list, not a shell string (spec S8)")
-    log_path = log_dir() / f"{entry_id}.log"
+    log_path = log_dir() / f"{safe_log_name(entry_id)}.log"
     handle = log_path.open("ab")
     handle.write(
         f"\n=== dgxctl launch {datetime.now(UTC).isoformat()}: {' '.join(argv)} ===\n".encode()
@@ -262,8 +263,16 @@ def launch(
     )
 
 
+def safe_log_name(entry_id: str) -> str:
+    """An entry id names a catalog entry, never a path. Reject anything that could leave
+    the log directory even though the route currently cannot express a separator."""
+    if not entry_id or any(sep in entry_id for sep in ("/", "\\", "\0")) or ".." in entry_id:
+        raise ValueError(f"invalid entry id {entry_id!r}")
+    return entry_id
+
+
 def read_log(entry_id: str, tail: int = 200) -> str:
-    path = log_dir() / f"{entry_id}.log"
+    path = log_dir() / f"{safe_log_name(entry_id)}.log"
     if not path.exists():
         return ""
     lines = path.read_text(errors="replace").splitlines()

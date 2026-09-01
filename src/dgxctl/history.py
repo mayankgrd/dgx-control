@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import sqlite3
 import threading
 import time
@@ -36,6 +37,8 @@ class HistoryStore:
         self._conn = connect(self.path)
         self._conn.executescript(SCHEMA)
         self._conn.commit()
+        with contextlib.suppress(OSError):
+            self.path.chmod(0o600)
 
     def record(self, metric: str, value: float, node: str = "local", ts: float | None = None):
         with self._lock:

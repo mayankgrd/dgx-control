@@ -60,6 +60,9 @@ class ActionRunner:
         self.settings = settings
         self.log_path = log_path or (state_dir() / "actions.jsonl")
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
+        # Records who asked for what. Not world-readable.
+        self.log_path.touch(exist_ok=True)
+        self.log_path.chmod(0o600)
 
     def _require_control(self) -> None:
         if not self.settings.control_enabled:

@@ -32,14 +32,37 @@ def auth_headers():
 
 
 def collect_routes(app):
-    """FastAPI wraps included routers, so walk the router objects, not app.routes."""
+    """Every route the app can serve.
+
+    This walks the router objects because FastAPI wraps included routers, AND the app's own
+    routes. The earlier version did only the former, so the app-level SPA catch-all was
+    invisible to this sweep — and that is precisely the route that turned out to serve
+    arbitrary files without authentication. A sweep that cannot see a route cannot vouch
+    for it.
+    """
     from dgxctl.api.routes import public_router, router
 
     out = []
-    for r in list(router.routes) + list(public_router.routes):
-        for method in sorted(r.methods - {"HEAD", "OPTIONS"}):
-            out.append((method, r.path))
+    for r in list(router.routes) + list(public_router.routes) + list(app.routes):
+        methods = getattr(r, "methods", None)
+        path = getattr(r, "path", None)
+        if not methods or not path:
+            continue
+        for method in sorted(methods - {"HEAD", "OPTIONS"}):
+            out.append((method, path))
     return sorted(set(out))
+
+
+# Routes that are public by design. Everything else must demand a token.
+PUBLIC_BY_DESIGN = {
+    "/api/health",  # liveness only, no host data (spec S1)
+    "/api/stream",  # gated by a single-use ticket instead
+    "/{full_path:path}",  # the built UI; constrained by tests/integration/
+    "/openapi.json",
+    "/docs",
+    "/docs/oauth2-redirect",
+    "/redoc",
+}
 
 
 def concrete(path: str) -> str:
@@ -60,8 +83,11 @@ def test_route_table_is_not_empty(app_with_token):
 def test_every_route_requires_auth(client, method, path):
     """A newly added unauthenticated route fails HERE, before it reaches a network."""
     url = concrete(path)
-    if path == "/api/health":
-        assert client.get(url).status_code == 200, "health must stay public"
+    if path in PUBLIC_BY_DESIGN:
+        # Public routes must still be proven harmless. /{full_path:path} serves the UI and is
+        # covered by tests/integration/test_path_traversal.py; health must leak nothing.
+        if path == "/api/health":
+            assert client.get(url).status_code == 200, "health must stay public"
         return
     resp = client.request(method, url, params={"metric": "x", "ticket": "bogus"})
     assert resp.status_code in (401, 403), (
@@ -202,3 +228,36 @@ def test_no_destructive_route_exists(app_with_token):
     for word in ("remove", "delete", "prune", "rm", "destroy"):
         assert word not in paths.lower()
     assert not any(m == "DELETE" for m, _ in collect_routes(app_with_token))
+
+
+def test_the_route_sweep_actually_sees_the_app_level_routes():
+    """Guard on the guard. The sweep previously walked only the routers, so the SPA
+    catch-all — the one route that turned out to serve arbitrary files unauthenticated —
+    was never examined."""
+    app = create_app(Settings(), start_poller=False)
+    paths = {p for _m, p in collect_routes(app)}
+    assert "/{full_path:path}" in paths, "the SPA catch-all must be visible to this sweep"
+    assert "/api/snapshot" in paths, "router routes must still be visible"
+
+
+def test_files_written_by_dgxctl_are_not_world_readable(tmp_path, monkeypatch):
+    """config.toml can hold a peer instance's API token and decides the bind address; the
+    action log records who asked for what. A stock Ubuntu umask of 002 would make both
+    group-writable and world-readable."""
+    import stat
+
+    from dgxctl.actions.runner import ActionRunner
+    from dgxctl.history import HistoryStore
+    from dgxctl.onboarding import render_config, write_config
+
+    cfg = tmp_path / "config.toml"
+    write_config(cfg, render_config("127.0.0.1", 8770, "n", control=False))
+    runner = ActionRunner(Settings(), log_path=tmp_path / "actions.jsonl")
+    hist = HistoryStore(tmp_path / "history.db")
+    hist.close()
+
+    for path in (cfg, runner.log_path, tmp_path / "history.db"):
+        mode = stat.S_IMODE(path.stat().st_mode)
+        assert not mode & (stat.S_IRWXG | stat.S_IRWXO), (
+            f"{path.name} is {oct(mode)}; must not be group- or world-accessible"
+        )
