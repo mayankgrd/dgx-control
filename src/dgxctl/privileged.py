@@ -51,6 +51,42 @@ class HelperStatus:
         return self.state == ENABLED
 
 
+RESTART = "systemctl --user daemon-reload && systemctl --user restart dgxctl"
+
+
+def _proc_status_path(pid: int) -> Path:
+    return Path(f"/proc/{pid}/status")
+
+
+def no_new_privileges(pid: int | None = None) -> bool:
+    """Is the no_new_privs flag set on this process (or `pid`)?
+
+    When it is, sudo refuses to gain root no matter what sudoers says. The dgxctl unit sets
+    NoNewPrivileges=true by default — which is how this was found on real hardware: the check
+    passed from a shell and failed inside the service.
+    """
+    try:
+        text = _proc_status_path(pid or os.getpid()).read_text()
+    except OSError:
+        return False
+    for line in text.splitlines():
+        if line.startswith("NoNewPrivs:"):
+            return line.split(":", 1)[1].strip() == "1"
+    return False
+
+
+def service_pid() -> int | None:
+    """MainPID of the running dgxctl user service, if there is one."""
+    try:
+        out = run_cmd(
+            ["systemctl", "--user", "show", "dgxctl", "-p", "MainPID", "--value"], timeout=5.0
+        )
+        pid = int(out.strip() or 0)
+    except (CommandError, ValueError):
+        return None
+    return pid or None
+
+
 def _writable_by_others(mode: int) -> bool:
     return bool(mode & (stat.S_IWGRP | stat.S_IWOTH))
 
@@ -79,6 +115,14 @@ def inspect(helper: Path = HELPER_PATH, mode: str = "auto", runner=run_cmd) -> H
                 f"sudo {enable} --remove && sudo {enable}",
             )
 
+    if no_new_privileges():
+        return HelperStatus(
+            NOT_PERMITTED,
+            "installed, but this process has NoNewPrivileges set, so sudo cannot gain root. The "
+            "dgxctl unit sets it by default; enable.sh relaxes it for installs that opt in",
+            f"sudo {enable} && {RESTART}",
+        )
+
     try:
         answer = runner(["sudo", "-n", str(helper), "check"], timeout=10.0)
     except CommandError as exc:
@@ -92,6 +136,27 @@ def inspect(helper: Path = HELPER_PATH, mode: str = "auto", runner=run_cmd) -> H
             NOT_PERMITTED, f"unexpected reply from helper: {answer!r:.60}", f"sudo {enable}"
         )
     return HelperStatus(ENABLED, "enabled — socket owners are visible for every user")
+
+
+def effective_status(mode: str = "auto") -> HelperStatus:
+    """The status as the RUNNING SERVICE sees it, even when asked from a shell.
+
+    A check from an interactive shell can succeed while the service — which carries different
+    process flags — cannot use the helper at all. Reporting the shell's view as the answer is
+    how `dgxctl privileged` once said "enabled" while every owner stayed hidden.
+    """
+    status = inspect(mode=mode)
+    if status.state != ENABLED:
+        return status
+    pid = service_pid()
+    if pid and pid != os.getpid() and no_new_privileges(pid):
+        return HelperStatus(
+            NOT_PERMITTED,
+            "installed, but the running service cannot use it: its unit sets NoNewPrivileges, so "
+            "sudo cannot gain root",
+            f"sudo {enable_script()} && {RESTART}",
+        )
+    return status
 
 
 class PrivilegedRunner:

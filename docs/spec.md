@@ -280,6 +280,10 @@ promise (R6.2). This requirement closes that gap without giving the service root
   root — and reports that as a security finding rather than using it.
 - **R17.8** `dgxctl doctor`, `dgxctl privileged` and the Network page say whether it is enabled,
   and wherever an owner is hidden, say how to enable it.
+- **R17.9** Status is reported **as the running service sees it**, not as an interactive shell does —
+  the two carry different process flags.
+- **R17.10** The service unit keeps `NoNewPrivileges=true` by default. Opting in relaxes it for that
+  install only, in the same step, because sudo cannot gain root while it is set.
 
 ### R9 — Multiple DGX systems
 

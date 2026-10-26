@@ -72,6 +72,7 @@ SDD-NNN)` · `DEFERRED`.
 | SDD-172 | Socket owners through the helper | 10 Privilege | R17.5, FE-7.5 | IN PROGRESS — awaiting live check with the helper installed |
 | SDD-173 | Docker root size without root | 10 Privilege | R17.5 | COMPLETE |
 | SDD-174 | Status in doctor, CLI and UI | 10 Privilege | R17.8 | IN PROGRESS — awaiting live check with the helper installed |
+| SDD-175 | NoNewPrivileges blocked the helper | 10 Privilege | R17.9, R17.10 | IN PROGRESS — awaiting re-run of enable.sh |
 | SDD-130 | Known-service catalog with explanations | 8 Services | R15.1, R15.4–R15.7 | COMPLETE |
 | SDD-131 | Classify by command line, not port alone | 8 Services | R15.3 | COMPLETE |
 | SDD-132 | Host address inventory | 8 Services | R16.1 | COMPLETE |
@@ -117,6 +118,7 @@ These are the defects the entire test matrix could not see. Each now has a named
 | SDD-112 | `torch-2.9.0+cu130.dist-info` parsed to version `2.9.0+cu130.dist`, and `cuda: Optional[str] = '13.0'` defeated the CUDA regex — so every GPU environment was reported as CPU | Strip the suffix before splitting; regex tolerates the type annotation; a `+cuNNN` tag is conclusive on its own | `test_torch_version_strips_the_dist_info_suffix`, `test_torch_cuda_detected_through_a_type_annotation` |
 | SDD-114 | A live SSE response held uvicorn in "waiting for connections to close" until systemd's 90 s stop timeout expired and **SIGKILLed** the service. Setting a shutdown flag in lifespan shutdown does not help — uvicorn drains connections *before* running it | Chain onto uvicorn's own SIGTERM/SIGINT handler so the flag is set when the signal arrives, then delegate. Stop went from 90 s + SIGKILL to **359 ms**, result `success` | `test_sse_stream_ends_when_the_app_shuts_down`, `test_shutdown_signal_is_chained_not_replaced` |
 | SDD-113 | A stale token left the UI on an empty shell with no way to re-enter one, because the prompt only appeared when *no* token was stored | Prompt on any unauthorized state; say the stored token was rejected | `test_a_rotated_token_must_not_strand_the_user` |
+| SDD-175 | With the helper installed and `sudo -n helper check` answering `ok` from a shell, the running service still reported `not_permitted` and hid every owner. The unit's own `NoNewPrivileges=true` stops sudo gaining root, and the status was taken from the shell's view, which carries no such flag — so `dgxctl privileged` said "enabled" while nothing worked | Keep the flag by default; `enable.sh` adds a per-user drop-in turning it off, written as the user. Status is now computed as the running service sees it, and the flag is detected before sudo is called | `test_no_new_privileges_is_reported_specifically`, `test_cli_checks_the_running_service_not_just_the_shell`, `test_unit_keeps_no_new_privileges_by_default`, `test_enable_writes_the_drop_in_as_the_user_not_as_root` |
 | SDD-094 | An empty cmdline was treated as "kernel thread", so a real process caught between `fork` and `execve` was refused. Wide enough to hit routinely on this hardware | Kernel threads identified by descent from kthreadd (pid 2) on Linux; the concept does not apply elsewhere | `test_sdd053_process_mid_exec_is_not_mistaken_for_a_kernel_thread` |
 
 ---
@@ -901,6 +903,17 @@ and says so, instead of showing an error.
 2. `test_doctor_flags_an_insecure_helper_as_an_error`;
 3. `dgxctl privileged` prints status and the exact enable and remove commands;
 4. Network page shows the hidden-owner count and the command (FE-7.5).
+
+## SDD-175 · NoNewPrivileges blocked the helper
+**Phase** 10 · **Status** IN PROGRESS · **Spec** R17.9, R17.10
+
+**Found on hardware.** The twelfth defect the suite could not see, and the second caused by this
+project's own systemd hardening (the first was `PrivateTmp`, SDD-107). Unit tests fake the sudo
+runner, so they could not know the unit forbids escalation.
+
+**Acceptance criteria** — see the regression table row, plus: on the reference machine after
+re-running `enable.sh`, the running service reports `enabled`, `owners_source` is `privileged`, the
+unnamed exposure findings are named, and `auth.log` does not grow with allowed runs.
 
 ## SDD-060 · vLLM `/metrics` scraping — DEFERRED
 Scrape running vLLM servers' Prometheus endpoint for queue depth, throughput, and TTFT — far richer

@@ -159,3 +159,35 @@ def test_the_ordinary_installer_still_never_uses_sudo():
     install = (PRIV.parent / "install.sh").read_text()
     assert not re.search(r"^\s*sudo\b", install, re.M)
     assert "enable.sh" not in install or "#" in install.split("enable.sh")[0].splitlines()[-1]
+
+
+# --- SDD-175: the opt-in also relaxes NoNewPrivileges, for that install only ---
+
+
+def test_unit_keeps_no_new_privileges_by_default():
+    """Hardening stays on for everyone who never opts in."""
+    unit = (PRIV.parent / "dgxctl.service").read_text()
+    directives = [ln.strip() for ln in unit.splitlines() if ln.strip() and not ln.startswith("#")]
+    assert "NoNewPrivileges=true" in directives
+
+
+def test_enable_writes_a_drop_in_that_relaxes_it():
+    text = ENABLE.read_text()
+    assert "dgxctl.service.d" in text
+    assert "NoNewPrivileges=false" in text
+
+
+def test_enable_writes_the_drop_in_as_the_user_not_as_root():
+    """Root writing into a user-controlled directory invites a symlink attack; do it as them."""
+    text = ENABLE.read_text()
+    assert 'runuser -u "$USER_NAME"' in text
+    dropin_writes = [ln for ln in text.splitlines() if "privileged.conf" in ln and ">" in ln]
+    for ln in dropin_writes:
+        assert "runuser" in ln, f"drop-in written as root: {ln.strip()}"
+
+
+def test_remove_deletes_the_drop_in_too():
+    text = ENABLE.read_text()
+    start = text.index('= "--remove" ]')
+    remove_block = text[start : text.index("exit 0", start)]
+    assert "privileged.conf" in remove_block

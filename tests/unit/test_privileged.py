@@ -165,3 +165,60 @@ def test_status_is_cached(tmp_path, monkeypatch):
     for _ in range(5):
         r.status()
     assert calls["n"] == 1, "inspect should not shell out to sudo on every call"
+
+
+# --- SDD-175: NoNewPrivileges (live regression) -------------------------------
+
+
+def test_no_new_privileges_is_reported_specifically(tmp_path, monkeypatch):
+    """Live regression: the service unit's NoNewPrivileges=true stops sudo from ever gaining
+    root, while the same check from a shell succeeds. The status must name the real cause."""
+    root_owned(monkeypatch)
+    tmp_path.chmod(0o755)
+    monkeypatch.setattr(pv, "no_new_privileges", lambda pid=None: True)
+    status = pv.inspect(fake_helper(tmp_path), runner=ok_runner)
+    assert status.state == pv.NOT_PERMITTED
+    assert "NoNewPrivileges" in status.detail
+    assert "daemon-reload" in (status.fix or "")
+
+
+def test_no_new_privileges_is_checked_before_calling_sudo(tmp_path, monkeypatch):
+    """Calling sudo under NoNewPrivs just produces a confusing error; don't."""
+    root_owned(monkeypatch)
+    tmp_path.chmod(0o755)
+    monkeypatch.setattr(pv, "no_new_privileges", lambda pid=None: True)
+    calls = []
+    pv.inspect(fake_helper(tmp_path), runner=lambda argv, timeout=10.0: calls.append(argv) or "ok")
+    assert calls == []
+
+
+def test_no_new_privileges_reads_proc_status(tmp_path, monkeypatch):
+    status = tmp_path / "status"
+    status.write_text("Name:\tpython\nNoNewPrivs:\t1\nSeccomp:\t0\n")
+    monkeypatch.setattr(pv, "_proc_status_path", lambda pid: status)
+    assert pv.no_new_privileges() is True
+    status.write_text("Name:\tpython\nNoNewPrivs:\t0\n")
+    assert pv.no_new_privileges() is False
+
+
+def test_unreadable_proc_status_assumes_no_flag(tmp_path, monkeypatch):
+    monkeypatch.setattr(pv, "_proc_status_path", lambda pid: tmp_path / "missing")
+    assert pv.no_new_privileges() is False
+
+
+def test_cli_checks_the_running_service_not_just_the_shell(monkeypatch):
+    """Live regression: `dgxctl privileged` said "enabled" from a shell while the running
+    service could not use the helper at all."""
+    from typer.testing import CliRunner
+
+    from dgxctl.cli import app
+
+    monkeypatch.setattr(
+        "dgxctl.privileged.inspect",
+        lambda helper=None, mode="auto", runner=None: pv.HelperStatus(pv.ENABLED, "enabled"),
+    )
+    monkeypatch.setattr("dgxctl.privileged.service_pid", lambda: 4242)
+    monkeypatch.setattr("dgxctl.privileged.no_new_privileges", lambda pid=None: pid == 4242)
+    out = CliRunner().invoke(app, ["privileged"])
+    assert "running service cannot use it" in out.output
+    assert "daemon-reload" in out.output

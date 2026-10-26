@@ -26,6 +26,9 @@ RestartSec=5
 TimeoutStopSec=20
 # The service reads /proc, the Docker socket and the HF cache. It writes only to its own
 # state directory, and it never needs elevated privileges.
+# NoNewPrivileges stays on by default. It also stops sudo gaining root, so the optional
+# privileged helper (deploy/privileged/enable.sh) adds a drop-in turning it off for installs that
+# opt in — and only those.
 NoNewPrivileges=true
 Environment=PYTHONUNBUFFERED=1
 

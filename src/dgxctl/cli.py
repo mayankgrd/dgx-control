@@ -411,7 +411,7 @@ def privileged():
     from dgxctl import privileged as pv
 
     settings = load_settings()
-    status = pv.inspect(mode=settings.privileged)
+    status = pv.effective_status(settings.privileged)
     script = pv.enable_script()
     colour = {
         pv.ENABLED: typer.colors.GREEN,
@@ -428,7 +428,9 @@ def privileged():
     typer.echo(f"  read the rule first:  {script} --print-sudoers $USER")
     typer.echo(f"  enable:               sudo {script}")
     typer.echo(f"  remove:               sudo {script} --remove")
-    typer.echo("  then:                 systemctl --user restart dgxctl")
+    typer.echo(f"  then:                 {pv.RESTART}")
+    if status.state == pv.NOT_PERMITTED and status.fix:
+        typer.secho(f"\nTo finish enabling it: {status.fix}", fg=typer.colors.YELLOW)
     if status.state == pv.INSECURE:
         typer.secho(
             f"\nThe installed helper is NOT safe to use. Fix: {status.fix}", fg=typer.colors.RED

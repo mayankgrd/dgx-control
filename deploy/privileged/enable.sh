@@ -47,19 +47,27 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
+USER_NAME="${SUDO_USER:-}"
+
+user_home() { getent passwd "$1" | cut -d: -f6; }
+dropin_dir() { echo "$(user_home "$1")/.config/systemd/user/dgxctl.service.d"; }
+
 if [ "${1:-}" = "--remove" ]; then
   rm -f "$SUDOERS" "$HELPER"
   rmdir "$DEST_DIR" 2>/dev/null || true
-  echo "Removed. dgxctl is back to unprivileged visibility."
-  echo "Restart it to notice: systemctl --user restart dgxctl"
+  if [ -n "$USER_NAME" ] && valid_user "$USER_NAME"; then
+    runuser -u "$USER_NAME" -- rm -f "$(dropin_dir "$USER_NAME")/privileged.conf"
+  fi
+  echo "Removed. dgxctl is back to unprivileged visibility, with NoNewPrivileges restored."
+  echo "Restart it to notice: systemctl --user daemon-reload && systemctl --user restart dgxctl"
   exit 0
 fi
 
-USER_NAME="${SUDO_USER:-}"
 if [ -z "$USER_NAME" ] || [ "$USER_NAME" = "root" ]; then
   echo "Run this with sudo from the account that runs dgxctl, not as root directly." >&2
   exit 1
 fi
+valid_user "$USER_NAME" || { echo "refusing user name: '$USER_NAME'" >&2; exit 1; }
 
 install -d -o root -g root -m 0755 "$DEST_DIR"
 install -o root -g root -m 0755 "$HERE/dgxctl-helper" "$HELPER"
@@ -71,7 +79,21 @@ sudoers_rule "$USER_NAME" > "$tmp"
 visudo -cf "$tmp" >/dev/null
 install -o root -g root -m 0440 "$tmp" "$SUDOERS"
 
+# The dgxctl unit sets NoNewPrivileges=true, under which sudo can never gain root. Relax it for
+# THIS install only, since this is the install that opted in; everyone else keeps it. Written as
+# the user, never as root, so a symlink planted in their home cannot redirect a root write.
+d="$(dropin_dir "$USER_NAME")"
+runuser -u "$USER_NAME" -- mkdir -p "$d"
+printf '%s\n' \
+  '[Service]' \
+  '# Written by dgx-control deploy/privileged/enable.sh; removed by enable.sh --remove.' \
+  '# sudo cannot gain root while NoNewPrivileges is set, so the read-only helper needs it off.' \
+  'NoNewPrivileges=false' \
+  | runuser -u "$USER_NAME" -- tee "$d/privileged.conf" >/dev/null
+
 echo "Enabled for $USER_NAME."
 echo "  helper:  $HELPER  (root-owned, read-only)"
 echo "  sudoers: $SUDOERS"
-echo "Restart dgxctl to pick it up: systemctl --user restart dgxctl"
+echo "  drop-in: $d/privileged.conf  (NoNewPrivileges=false for this install)"
+echo "Restart dgxctl to pick it up:"
+echo "  systemctl --user daemon-reload && systemctl --user restart dgxctl"

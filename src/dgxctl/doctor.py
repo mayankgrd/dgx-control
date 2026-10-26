@@ -149,7 +149,7 @@ async def run_doctor(settings: Settings) -> DoctorReport:
 
     # Optional privileged helper (spec R17). An INSECURE helper is a root shell for whoever
     # can modify it, so it fails doctor rather than merely warning.
-    helper = await asyncio.to_thread(pv.inspect, mode=settings.privileged)
+    helper = await asyncio.to_thread(pv.effective_status, settings.privileged)
     checks.append(
         DoctorCheck(
             name="privileged",
