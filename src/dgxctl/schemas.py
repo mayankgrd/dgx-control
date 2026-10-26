@@ -169,6 +169,8 @@ class SizedRoot(BaseModel):
     label: str
     size_bytes: int | None = None
     error: str | None = None
+    source: str = "du"  # du | docker-api
+    note: str | None = None
 
 
 class DockerUsage(BaseModel):
@@ -200,6 +202,13 @@ class NetworkSection(BaseModel):
     listeners: list[Listener] = Field(default_factory=list)
     findings: list[Listener] = Field(default_factory=list)
     local_addresses: list[str] = Field(default_factory=list)
+    # Where socket owners came from (spec R17): "privileged" when the helper answered.
+    owners_source: str = "unprivileged"
+    # Listeners whose owner could not be named, by process or by container.
+    hidden_owners: int = 0
+    privileged: str = "disabled"  # enabled | not_installed | not_permitted | insecure | disabled
+    privileged_detail: str | None = None
+    privileged_fix: str | None = None
 
 
 class TailscalePeer(BaseModel):

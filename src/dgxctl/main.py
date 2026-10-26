@@ -30,6 +30,7 @@ from dgxctl.collectors.tailscale import TailscaleCollector
 from dgxctl.config import Settings, load_settings, state_dir
 from dgxctl.history import HistoryStore
 from dgxctl.poller import Poller
+from dgxctl.privileged import PrivilegedRunner
 from dgxctl.schemas import NodeInfo
 from dgxctl.store import SnapshotStore
 
@@ -124,7 +125,11 @@ def build_collectors(settings: Settings, store: SnapshotStore) -> list:
         _Containers(),
         ImageCollector(),
         DiskCollector(roots=settings.sized_roots, warn_percent=settings.disk_warn_percent),
-        NetworkCollector(tailnet_ips=tailnet_ips, port_owner=container_for_host_port),
+        NetworkCollector(
+            tailnet_ips=tailnet_ips,
+            port_owner=container_for_host_port,
+            privileged=PrivilegedRunner(mode=settings.privileged),
+        ),
         tailscale,
         ServiceCollector(
             listeners_fn=lambda: section_data("network", "listeners", []),

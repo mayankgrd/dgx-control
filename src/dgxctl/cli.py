@@ -406,6 +406,37 @@ def expose():
 
 
 @app.command()
+def privileged():
+    """Status of the optional privileged helper, and how to enable or remove it (spec R17)."""
+    from dgxctl import privileged as pv
+
+    settings = load_settings()
+    status = pv.inspect(mode=settings.privileged)
+    script = pv.enable_script()
+    colour = {
+        pv.ENABLED: typer.colors.GREEN,
+        pv.INSECURE: typer.colors.RED,
+        pv.NOT_PERMITTED: typer.colors.YELLOW,
+    }.get(status.state, typer.colors.BRIGHT_BLACK)
+    typer.secho(f"Privileged helper: {status.state}", bold=True, fg=colour)
+    typer.echo(f"  {status.detail}")
+    typer.echo("")
+    typer.echo("What it does: lets dgxctl name the owner of every listening socket, including")
+    typer.echo("those belonging to other users (sshd, mDNS, tailscaled). Read-only; it cannot")
+    typer.echo("kill, write or change anything. Nothing else runs as root.")
+    typer.echo("")
+    typer.echo(f"  read the rule first:  {script} --print-sudoers $USER")
+    typer.echo(f"  enable:               sudo {script}")
+    typer.echo(f"  remove:               sudo {script} --remove")
+    typer.echo("  then:                 systemctl --user restart dgxctl")
+    if status.state == pv.INSECURE:
+        typer.secho(
+            f"\nThe installed helper is NOT safe to use. Fix: {status.fix}", fg=typer.colors.RED
+        )
+        raise typer.Exit(1)
+
+
+@app.command()
 def doctor():
     """Check every data source and report what will and will not work here."""
     from dgxctl.doctor import run_doctor

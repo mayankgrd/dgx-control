@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useSection } from "../api/stream";
 import { Empty, ExposureBadge, Panel, Table } from "../components/ui";
 import type { NetworkSection, TailscaleSection } from "../api/types";
+import { ownerHiddenLabel, PrivilegedNotice } from "../components/privileged";
 
 export default function Network() {
   const network = useSection<NetworkSection>("network");
@@ -33,6 +34,8 @@ export default function Network() {
             </p>;
           }
           return (
+            <div className="space-y-3">
+            <PrivilegedNotice section={data} />
             <Table head={["Exposure", "Bind", "Port", "Proto", "Owner"]}>
               {rows.map((l, i) => (
                 <tr key={`${l.protocol}-${l.bind_ip}-${l.port}-${i}`}>
@@ -44,7 +47,7 @@ export default function Network() {
                     {l.process ?? l.container_name ?? (
                       <span className="text-[var(--color-ink-faint)]"
                         title="Owned by another user; an unprivileged `ss` cannot see its PID.">
-                        not visible to this user
+                        {ownerHiddenLabel(data)}
                       </span>
                     )}
                     {l.pid && <span className="text-xs text-[var(--color-ink-faint)]"> · pid {l.pid}</span>}
@@ -52,6 +55,7 @@ export default function Network() {
                 </tr>
               ))}
             </Table>
+            </div>
           );
         }}
       </Panel>

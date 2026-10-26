@@ -133,6 +133,10 @@ The page that answers "how do I get to my stuff" without going anywhere else.
 - **FE-7.4** An explicit banner stating the tailnet is shared and that non-loopback binds are
   reachable by other people's machines.
 
+- **FE-7.5** Each listener says where its owner came from. When owners are hidden because dgxctl runs
+  unprivileged, the page says how many and shows the one command that reveals them (R17.8),
+  instead of a bare "not visible to this user".
+
 ### FE-8 · Settings (`/settings`)
 
 - **FE-8.1** Read-only view of effective config: bind, port, intervals, control gate, retention.

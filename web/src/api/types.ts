@@ -133,7 +133,10 @@ export interface FilesystemInfo {
   total_bytes: number; used_bytes: number; free_bytes: number;
   percent: number; over_threshold: boolean;
 }
-export interface SizedRoot { path: string; label: string; size_bytes: number | null; error: string | null }
+export interface SizedRoot {
+  path: string; label: string; size_bytes: number | null; error: string | null;
+  source: "du" | "docker-api"; note: string | null;
+}
 export interface DockerUsage {
   images_bytes: number; containers_bytes: number; volumes_bytes: number;
   build_cache_bytes: number; reclaimable_bytes: number;
@@ -146,8 +149,17 @@ export interface Listener {
   protocol: string; bind_ip: string; port: number; exposure: Exposure;
   pid: number | null; process: string | null; container_name: string | null; is_finding: boolean;
 }
+export type PrivilegedState =
+  | "enabled" | "not_installed" | "not_permitted" | "insecure" | "disabled";
+
 export interface NetworkSection {
   listeners: Listener[]; findings: Listener[]; local_addresses: string[];
+  /** Where socket owners came from (spec R17). */
+  owners_source: "privileged" | "unprivileged";
+  hidden_owners: number;
+  privileged: PrivilegedState;
+  privileged_detail: string | null;
+  privileged_fix: string | null;
 }
 
 export interface TailscalePeer {

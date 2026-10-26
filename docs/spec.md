@@ -258,6 +258,29 @@ without knowing in advance which of its data sources their machine has.
 - **R14.9** It finishes by verifying the service actually answers, and printing the URL(s) to use
   and how to get the token.
 
+### R17 — Optional privileged visibility
+
+dgxctl runs unprivileged (N4), and on a stock DGX that hides one thing that matters: the owner of
+any socket belonging to another user. Measured on a real Spark, 17 of 32 listeners — including
+sshd, mDNS and tailscaled on `0.0.0.0` — showed no owner, so the exposure audit could not keep its
+promise (R6.2). This requirement closes that gap without giving the service root.
+
+- **R17.1** Off by default. dgxctl is fully functional without it and never escalates on its own.
+- **R17.2** Enabled by **one root command the operator runs deliberately**, and removed by one.
+- **R17.3** The privileged path is a root-owned helper installed **outside any user-writable
+  location**, reachable only through a sudoers rule that permits an **exact, fixed argv**. No value
+  from a request, config file or environment reaches it.
+- **R17.4** The helper is **read-only**: it reports, and cannot kill, write or reconfigure anything.
+- **R17.5** Scope is the minimum that cannot be met any other way: socket ownership. Anything the
+  unprivileged service can learn another way — the Docker data root's size, via the Docker API —
+  is learned that way instead.
+- **R17.6** If the helper is absent, misconfigured or fails, dgxctl falls back to the unprivileged
+  path. Enabling it can never make the dashboard worse.
+- **R17.7** dgxctl **refuses a helper it cannot trust** — not root-owned, or writable by anyone but
+  root — and reports that as a security finding rather than using it.
+- **R17.8** `dgxctl doctor`, `dgxctl privileged` and the Network page say whether it is enabled,
+  and wherever an owner is hidden, say how to enable it.
+
 ### R9 — Multiple DGX systems
 
 - **R9.1** One instance may aggregate peer instances so several DGX systems appear in one

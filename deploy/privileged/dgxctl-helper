@@ -1,0 +1,23 @@
+#!/bin/sh
+# dgxctl privileged helper (spec R17).
+#
+# Installed root-owned at /usr/local/libexec/dgxctl/dgxctl-helper by enable.sh, and run as root
+# only through a sudoers rule naming each permitted argv exactly. It is read-only: it reports
+# socket owners and does nothing else. No value from a request, a config file or the caller's
+# environment can reach it.
+set -eu
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+usage() {
+  echo "usage: dgxctl-helper {check|sockets}" >&2
+  exit 2
+}
+
+[ "$#" -eq 1 ] || usage
+
+case "$1" in
+  check)   echo ok ;;
+  sockets) exec ss -tulnpH ;;
+  *)       usage ;;
+esac

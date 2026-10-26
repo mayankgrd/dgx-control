@@ -126,6 +126,22 @@ reports itself as a finding when bound beyond loopback.
 
 The token lives at `~/.config/dgxctl/token`, mode `0600`. A looser mode is refused.
 
+### Seeing every socket's owner (optional)
+
+dgxctl runs without root, so Linux won't tell it who owns sockets belonging to other users — sshd,
+mDNS, tailscaled. They show up as exposed with no owner. To name them, install a small read-only
+helper once:
+
+```bash
+./deploy/privileged/enable.sh --print-sudoers $USER   # read exactly what it grants
+sudo ./deploy/privileged/enable.sh
+systemctl --user restart dgxctl
+```
+
+It adds one sudoers rule letting your user run one root-owned command that lists socket owners —
+nothing else, and nothing that can change the system. dgxctl refuses to use the helper if it is not
+root-owned and protected. Remove it with `sudo ./deploy/privileged/enable.sh --remove`.
+
 ### Choosing how to expose it
 
 dgxctl binds one address. `dgxctl expose` shows the current setting and how to change it.

@@ -107,6 +107,16 @@ else
 fi
 
 echo
+# The privileged helper is root-owned, so this unprivileged script cannot remove it. Leaving a
+# sudoers rule behind silently would be the worst outcome, so say so loudly.
+if [ -e /etc/sudoers.d/dgxctl ] || [ -e /usr/local/libexec/dgxctl/dgxctl-helper ]; then
+  echo
+  say "The optional privileged helper is still installed, and needs root to remove:"
+  echo "    sudo \"$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/privileged/enable.sh\" --remove"
+  echo "  or by hand:"
+  echo "    sudo rm -f /etc/sudoers.d/dgxctl /usr/local/libexec/dgxctl/dgxctl-helper"
+fi
+
 say "Left running (containers, and anything started outside dgxctl):"
 if command -v docker >/dev/null 2>&1; then
   docker ps --filter label=dgxctl.entry --format '    container {{.Names}} ({{.Ports}})' 2>/dev/null || true

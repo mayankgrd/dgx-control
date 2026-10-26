@@ -29,6 +29,15 @@ PSEUDO_FS = {
 }
 
 
+def short_error(exc: Exception, limit: int = 120) -> str:
+    """`du` puts the reason LAST ("cannot read directory '<long path>': Permission denied"), so
+    cutting from the front drops the one part worth reading. Keep the reason."""
+    text = str(exc)
+    if "Permission denied" in text:
+        return "permission denied"
+    return text if len(text) <= limit else "…" + text[-(limit - 1) :]
+
+
 class DiskCollector(Collector):
     name = "disk"
     interval = 60.0
@@ -82,15 +91,21 @@ class DiskCollector(Collector):
             )
         section.filesystems.sort(key=lambda f: -f.total_bytes)
 
-        roots = list(self.roots)
         client = get_client()
+        docker_root: str | None = None
         if client is not None:
             try:
-                root = client.info().get("DockerRootDir")
-                if root and root not in roots:
-                    roots.append(root)
+                docker_root = client.info().get("DockerRootDir")
             except Exception:  # noqa: BLE001, S110
                 pass
+            try:
+                section.docker = self._docker_usage(client)
+            except Exception:  # noqa: BLE001, S110
+                pass
+
+        roots = list(self.roots)
+        if docker_root and docker_root not in roots:
+            roots.append(docker_root)
 
         for r in roots:
             p = Path(r).expanduser()
@@ -101,31 +116,36 @@ class DiskCollector(Collector):
                 try:
                     entry.size_bytes = self._du(p)
                 except Exception as exc:  # noqa: BLE001 -- one bad root cannot fail the section
-                    entry.error = str(exc)[:120]
+                    if str(p) == docker_root and section.docker is not None:
+                        # `du` needs root here, but the Docker API already knows the answer.
+                        # Asking for privilege to learn something available without it would
+                        # violate R17.5.
+                        d = section.docker
+                        entry.size_bytes = (
+                            d.images_bytes
+                            + d.containers_bytes
+                            + d.volumes_bytes
+                            + d.build_cache_bytes
+                        )
+                        entry.source = "docker-api"
+                        entry.note = "measured via the Docker API; the directory itself needs root"
+                    else:
+                        entry.error = short_error(exc)
             section.sized_roots.append(entry)
         section.sized_roots.sort(key=lambda s: -(s.size_bytes or 0))
-
-        if client is not None:
-            try:
-                df = client.df()
-                usage = DockerUsage()
-                imgs = df.get("Images") or []
-                usage.images_bytes = sum(i.get("Size", 0) or 0 for i in imgs)
-                usage.containers_bytes = sum(
-                    c.get("SizeRw", 0) or 0 for c in (df.get("Containers") or [])
-                )
-                usage.volumes_bytes = sum(
-                    (v.get("UsageData") or {}).get("Size", 0) or 0
-                    for v in (df.get("Volumes") or [])
-                )
-                usage.build_cache_bytes = sum(
-                    b.get("Size", 0) or 0 for b in (df.get("BuildCache") or [])
-                )
-                unused = sum(
-                    i.get("Size", 0) or 0 for i in imgs if not (i.get("Containers", 0) or 0) > 0
-                )
-                usage.reclaimable_bytes = unused + usage.build_cache_bytes
-                section.docker = usage
-            except Exception:  # noqa: BLE001, S110
-                pass
         return section
+
+    @staticmethod
+    def _docker_usage(client) -> DockerUsage:
+        df = client.df()
+        usage = DockerUsage()
+        imgs = df.get("Images") or []
+        usage.images_bytes = sum(i.get("Size", 0) or 0 for i in imgs)
+        usage.containers_bytes = sum(c.get("SizeRw", 0) or 0 for c in (df.get("Containers") or []))
+        usage.volumes_bytes = sum(
+            (v.get("UsageData") or {}).get("Size", 0) or 0 for v in (df.get("Volumes") or [])
+        )
+        usage.build_cache_bytes = sum(b.get("Size", 0) or 0 for b in (df.get("BuildCache") or []))
+        unused = sum(i.get("Size", 0) or 0 for i in imgs if not (i.get("Containers", 0) or 0) > 0)
+        usage.reclaimable_bytes = unused + usage.build_cache_bytes
+        return usage

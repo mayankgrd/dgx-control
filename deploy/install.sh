@@ -73,6 +73,10 @@ fi
 PKG_DIR="$("$VENV/bin/python" -c 'import dgxctl, os; print(os.path.dirname(dgxctl.__file__))')"
 mkdir -p "$PKG_DIR/_data"
 cp "$REPO/deploy/dgxctl.service" "$PKG_DIR/_data/dgxctl.service"
+# The optional privileged helper's installer travels with the package so `dgxctl privileged`
+# can point at a script that exists. Copying it is not enabling it: that needs a deliberate sudo.
+rm -rf "$PKG_DIR/_data/privileged"
+cp -r "$REPO/deploy/privileged" "$PKG_DIR/_data/privileged"
 
 export PATH="$VENV/bin:$PATH"
 

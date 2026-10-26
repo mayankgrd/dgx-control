@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import tomllib
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
@@ -84,6 +85,9 @@ class Settings(BaseModel):
     node_name: str | None = None
 
     control_enabled: bool = False
+    # Optional privileged helper (spec R17). "auto" uses it when installed and trustworthy;
+    # installing it with deploy/privileged/enable.sh is the opt-in. "off" ignores it.
+    privileged: Literal["auto", "off"] = "auto"
     tailscale_allowlist: list[str] = Field(default_factory=list)
 
     disk_warn_percent: float = 85.0

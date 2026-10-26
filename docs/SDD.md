@@ -67,6 +67,11 @@ SDD-NNN)` · `DEFERRED`.
 | SDD-160 | README trimmed; methodology moved to docs | 9 Release | — | COMPLETE |
 | SDD-161 | Relicence MIT → Apache 2.0 | 9 Release | — | COMPLETE |
 | SDD-162 | CLAUDE.md shortened for release | 9 Release | — | COMPLETE |
+| SDD-170 | Privileged helper and its installer | 10 Privilege | R17.1–R17.4 | IN PROGRESS — awaiting live check with the helper installed |
+| SDD-171 | Trusting the helper, and falling back | 10 Privilege | R17.6, R17.7 | IN PROGRESS — awaiting live check with the helper installed |
+| SDD-172 | Socket owners through the helper | 10 Privilege | R17.5, FE-7.5 | IN PROGRESS — awaiting live check with the helper installed |
+| SDD-173 | Docker root size without root | 10 Privilege | R17.5 | COMPLETE |
+| SDD-174 | Status in doctor, CLI and UI | 10 Privilege | R17.8 | IN PROGRESS — awaiting live check with the helper installed |
 | SDD-130 | Known-service catalog with explanations | 8 Services | R15.1, R15.4–R15.7 | COMPLETE |
 | SDD-131 | Classify by command line, not port alone | 8 Services | R15.3 | COMPLETE |
 | SDD-132 | Host address inventory | 8 Services | R16.1 | COMPLETE |
@@ -828,6 +833,74 @@ would touch every file for no practical gain on a project this size.
 3. `test_the_licence_text_is_complete` — a truncated licence is worse than none, so the sections
    that motivated the choice are asserted present.
 4. Installed package metadata reports `Apache-2.0` and the OSI classifier.
+
+## SDD-170 · Privileged helper and its installer
+**Phase** 10 · **Status** TODO · **Spec** R17.1–R17.4 · **Arch** §17
+
+**Design.** `deploy/privileged/dgxctl-helper` is a POSIX shell script that takes exactly one argument
+from a fixed list — `sockets` (`ss -tulnpH`) and `check` — sets its own `PATH`, and does nothing
+else. `deploy/privileged/enable.sh`, run once with `sudo`, installs it root-owned `0755` at
+`/usr/local/libexec/dgxctl/dgxctl-helper` and writes `/etc/sudoers.d/dgxctl` (`0440`, validated with
+`visudo -cf` before it is moved into place) granting the invoking user exactly those two argv.
+`--remove` undoes both.
+
+**Acceptance criteria**
+1. `test_helper_rejects_unknown_subcommands` and `test_helper_rejects_extra_arguments`;
+2. `test_helper_check_reports_ok`;
+3. `test_helper_sets_its_own_path` — never trusts the caller's;
+4. `test_helper_cannot_write_or_kill` — no `kill`, `rm`, redirection to a file, or `eval`;
+5. `test_sudoers_rule_names_exact_argv` — no wildcard, no `ALL` command, only the helper path;
+6. `test_enable_refuses_to_run_without_root` and `test_enable_refuses_root_as_target_user`;
+7. `test_enable_validates_sudoers_before_installing`;
+8. `test_installer_never_calls_sudo` — `install.sh` stays unprivileged (R14.1).
+
+## SDD-171 · Trusting the helper, and falling back
+**Phase** 10 · **Status** TODO · **Spec** R17.6, R17.7
+
+**Design.** `privileged.py` decides whether the helper is usable: present at the fixed path,
+root-owned, not writable by group or others, `privileged != "off"` in config, and
+`sudo -n <helper> check` answers `ok`. The verdict is cached briefly. A helper that exists but fails
+the ownership test is reported as **insecure**, never used.
+
+**Acceptance criteria**
+1. `test_missing_helper_is_not_available`;
+2. `test_user_owned_helper_is_refused_as_insecure` — the realistic attack: a writable file at a path
+   sudo would run as root;
+3. `test_group_or_world_writable_helper_is_refused`;
+4. `test_config_off_disables_it_even_when_installed`;
+5. `test_sudo_failure_falls_back_cleanly`;
+6. `test_helper_argv_is_fixed` — the code path cannot pass anything but a known subcommand.
+
+## SDD-172 · Socket owners through the helper
+**Phase** 10 · **Status** TODO · **Spec** R17.5, FE-7.5
+
+**Acceptance criteria**
+1. `test_network_uses_the_helper_when_available`;
+2. `test_network_falls_back_when_the_helper_fails`;
+3. `test_network_reports_where_owners_came_from` — `owners_source` and `hidden_owners`;
+4. `test_privileged_output_goes_through_the_same_parser` — no new parsing surface;
+5. **Wiring:** `test_app_passes_the_privileged_runner_to_the_network_collector`.
+
+## SDD-173 · Docker root size without root
+**Phase** 10 · **Status** TODO · **Spec** R17.5
+
+**Design.** `du` on the Docker data root fails with permission denied for any non-root user. The
+Docker API's own disk usage answers the same question, so the sized root falls back to that total
+and says so, instead of showing an error.
+
+**Acceptance criteria**
+1. `test_unreadable_docker_root_uses_the_docker_api_total`;
+2. `test_the_fallback_is_labelled`;
+3. `test_other_unreadable_roots_still_report_their_error`.
+
+## SDD-174 · Status in doctor, CLI and UI
+**Phase** 10 · **Status** TODO · **Spec** R17.8
+
+**Acceptance criteria**
+1. `test_doctor_reports_privileged_status` — enabled / not installed / insecure, each with its fix;
+2. `test_doctor_flags_an_insecure_helper_as_an_error`;
+3. `dgxctl privileged` prints status and the exact enable and remove commands;
+4. Network page shows the hidden-owner count and the command (FE-7.5).
 
 ## SDD-060 · vLLM `/metrics` scraping — DEFERRED
 Scrape running vLLM servers' Prometheus endpoint for queue depth, throughput, and TTFT — far richer

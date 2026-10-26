@@ -39,6 +39,7 @@ export default function Storage() {
                   <td className="px-2 py-2">
                     <div className="font-medium">{r.label}</div>
                     <div className="text-xs text-[var(--color-ink-faint)]">{r.path}</div>
+                    {r.note && <div className="text-[11px] text-[var(--color-ink-faint)]">{r.note}</div>}
                   </td>
                   <td className="px-2 py-2">
                     {r.error ? <span className="text-xs text-[var(--color-ink-faint)]">{r.error}</span>

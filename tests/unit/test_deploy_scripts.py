@@ -143,3 +143,16 @@ def test_unit_relies_on_the_default_kill_mode():
         "KillMode is deliberately unset — see the comment in the unit file"
     )
     assert "KillMode" in unit, "the reason it is unset must stay documented"
+
+
+def test_install_ships_the_privileged_installer_without_running_it():
+    """`dgxctl privileged` must point at an enable.sh that exists — but copying is not enabling."""
+    text = (DEPLOY / "install.sh").read_text()
+    assert '"$PKG_DIR/_data/privileged"' in text
+    assert "enable.sh" not in text.replace("# The optional privileged helper's installer", "")
+
+
+def test_uninstall_does_not_silently_leave_a_sudoers_rule_behind():
+    text = (DEPLOY / "uninstall.sh").read_text()
+    assert "/etc/sudoers.d/dgxctl" in text
+    assert "--remove" in text and "privileged/enable.sh" in text

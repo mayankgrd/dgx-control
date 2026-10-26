@@ -23,6 +23,7 @@ task.** Keep consistent with [spec.md](spec.md) forever after.
 | 14 | Service identity & reachability | Anything on the Services page |
 | 15 | Launchables & process lifecycle | Launching or stopping workloads |
 | 16 | Onboarding & installation | Install, setup, or uninstall |
+| 17 | Optional privileged helper | Anything that would need root |
 
 ---
 
@@ -499,3 +500,43 @@ that was later reclaimed.
 
 `deploy/uninstall.sh` is the counterpart: `--dry-run` to preview, config and history kept unless
 `--purge`, and it refuses to remove a `~/.local/bin/dgxctl` it did not create.
+
+
+## 17. Optional privileged helper
+
+dgxctl runs unprivileged (N4). The single thing that costs on a stock DGX is socket ownership: `ss`
+only reports the owning process for sockets the caller owns, so sshd, mDNS and tailscaled appear as
+exposed with no owner. R17 adds an opt-in path to that one fact, and nothing else.
+
+**Shape.** Three pieces, each as small as it can be:
+
+```
+dgxctl (unprivileged)
+  └─ sudo -n /usr/local/libexec/dgxctl/dgxctl-helper sockets     ← exact argv, nothing variable
+        └─ /etc/sudoers.d/dgxctl permits only that argv (and `check`) for one user
+              └─ helper: POSIX sh, sets its own PATH, `exec ss -tulnpH`
+```
+
+**Why sudoers and not the alternatives.**
+
+- *Run the service as root* — the whole HTTP surface would become root's. Rejected outright.
+- *`setcap` on a copy of `ss`* — works, but capabilities on a file are invisible to anyone reading
+  the system's configuration, and the binary would then answer for every local user.
+- *A root daemon on a Unix socket* — a second long-running privileged process to secure and keep
+  alive, for one query.
+- *A sudoers rule naming an exact argv* — sudo refuses any other arguments, the grant is one
+  readable line in `/etc/sudoers.d/`, it is scoped to one user, and removing it is one command.
+
+**The trust check is the important part.** A sudoers rule pointing at a file a user can modify is a
+root shell for that user. So the helper lives under `/usr/local/libexec`, root-owned, `0755`; and
+`privileged.py` re-verifies ownership and mode before every use, refusing — and reporting as an
+error — any helper that is not root-owned or is writable by group or others. Installing it is the
+opt-in, so `privileged = "auto"` (the default) uses it when present and valid; `"off"` disables it
+without uninstalling.
+
+**Nothing new to parse.** The helper's output is `ss -tulnpH` — the same bytes the unprivileged path
+already parses, through the same parser and the same fixtures. Elevated output gets no new code.
+
+**What deliberately stays unprivileged.** The Docker data root's size needs root for `du`, but the
+Docker API reports the same totals without it, so that is used instead (R17.5). Killing another
+user's process stays refused (S6): privilege here is for seeing, not acting.

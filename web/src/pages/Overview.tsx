@@ -3,6 +3,7 @@ import { useSection } from "../api/stream";
 import { api } from "../api/client";
 import { Bar, Empty, ExposureBadge, Panel, StatTile, Sparkline, Table } from "../components/ui";
 import { bytes, percent, since } from "../format";
+import { ownerHiddenLabel } from "../components/privileged";
 import type {
   ContainerSection, DiskSection, GpuSection, NetworkSection, ProcessSection,
 } from "../api/types";
@@ -95,7 +96,7 @@ export default function Overview() {
                   <ExposureBadge exposure={f.exposure} />
                   <span className="font-medium">:{f.port}</span>
                   <span className="text-[var(--color-ink-dim)]">
-                    {f.process ?? f.container_name ?? "owner not visible to this user"}
+                    {f.process ?? f.container_name ?? ownerHiddenLabel(network?.data ?? { privileged: "disabled" })}
                   </span>
                 </li>
               ))}

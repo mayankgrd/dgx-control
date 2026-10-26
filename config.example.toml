@@ -9,6 +9,11 @@ node_name = "dgx-spark"  # shown in the header, and in the node switcher on a fl
 # Control actions (container start/stop, launching, process kill) are OFF by default.
 control_enabled = false
 
+# Optional privileged helper, which lets dgxctl name the owner of every socket. Installing it with
+# `sudo deploy/privileged/enable.sh` is the opt-in; "auto" uses it when present and trustworthy,
+# "off" ignores it without uninstalling.
+privileged = "auto"
+
 disk_warn_percent = 85
 # Prefer these when building links and port-forward commands. Set this if you reach the
 # machine by a name rather than a raw IP; detected addresses are still offered after these.

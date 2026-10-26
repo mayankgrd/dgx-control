@@ -1938,6 +1938,43 @@
             },
             "type": "array",
             "title": "Local Addresses"
+          },
+          "owners_source": {
+            "type": "string",
+            "title": "Owners Source",
+            "default": "unprivileged"
+          },
+          "hidden_owners": {
+            "type": "integer",
+            "title": "Hidden Owners",
+            "default": 0
+          },
+          "privileged": {
+            "type": "string",
+            "title": "Privileged",
+            "default": "disabled"
+          },
+          "privileged_detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Privileged Detail"
+          },
+          "privileged_fix": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Privileged Fix"
           }
         },
         "type": "object",
@@ -2606,6 +2643,22 @@
               }
             ],
             "title": "Error"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": "du"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
           }
         },
         "type": "object",

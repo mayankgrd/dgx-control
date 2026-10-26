@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 
+from dgxctl import privileged as pv
 from dgxctl.collectors.base import have
 from dgxctl.config import Settings
 from dgxctl.docker_client import get_client, get_error
@@ -143,6 +144,22 @@ async def run_doctor(settings: Settings) -> DoctorReport:
             status=Status.ok,
             detail=f"control actions {'ENABLED' if settings.control_enabled else 'disabled'}",
             fix=None if settings.control_enabled else "Set control_enabled = true to allow actions",
+        )
+    )
+
+    # Optional privileged helper (spec R17). An INSECURE helper is a root shell for whoever
+    # can modify it, so it fails doctor rather than merely warning.
+    helper = await asyncio.to_thread(pv.inspect, mode=settings.privileged)
+    checks.append(
+        DoctorCheck(
+            name="privileged",
+            status={
+                pv.ENABLED: Status.ok,
+                pv.NOT_PERMITTED: Status.degraded,
+                pv.INSECURE: Status.error,
+            }.get(helper.state, Status.unavailable),
+            detail=helper.detail,
+            fix=helper.fix,
         )
     )
 

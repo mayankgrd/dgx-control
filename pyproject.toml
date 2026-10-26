@@ -34,6 +34,7 @@ packages = ["src/dgxctl"]
 [tool.hatch.build.targets.wheel.force-include]
 "catalog/default.toml" = "dgxctl/_data/catalog_default.toml"
 "deploy/dgxctl.service" = "dgxctl/_data/dgxctl.service"
+"deploy/privileged" = "dgxctl/_data/privileged"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
